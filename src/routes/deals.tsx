@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Phone, Navigation, ChevronDown, ChevronUp } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui-brutal";
+import { HouseDetail, type DetailStatus } from "@/components/HouseDetail";
 import {
   mockLeads,
   mockQuotes,
@@ -54,6 +55,7 @@ const STRIPE_BG: Record<StripeTone, string> = {
 function DealsPage() {
   const navigate = useNavigate();
   const [wonOpen, setWonOpen] = useState(false);
+  const [selected, setSelected] = useState<DealCard | null>(null);
 
   const { hottest, pipeline, won, totals } = useMemo(() => {
     const quoteByAddr = new Map(mockQuotes.map((q) => [q.address, q]));
@@ -159,8 +161,8 @@ function DealsPage() {
     { label: "WON", value: totals.wonTotal, color: "var(--heatmap-5)" },
   ];
 
-  const openHouse = (address: string) =>
-    navigate({ to: "/quote", search: { address, mode: "quote" } });
+  // Tap a deal card → open the read-only detail sheet (NOT the capture form).
+  const openHouse = (card: DealCard) => setSelected(card);
 
   const callPhone = (e: React.MouseEvent, phone?: string) => {
     e.stopPropagation();
