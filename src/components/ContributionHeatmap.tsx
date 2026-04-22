@@ -467,44 +467,70 @@ export function ContributionHeatmap() {
       )}
 
       {/* Desktop hover tooltip — clamped to section edges, structured value/label rows */}
-      {!isMobile && !isTablet && hoverCell && hoverPos && (() => {
-        const TOOLTIP_W = 280;
-        const half = TOOLTIP_W / 2;
-        // Best-effort edge clamp using section width via the cell's section ref
-        // hoverPos.x is already relative to the section
-        return (
-          <div
-            className="absolute z-20 pointer-events-none border-2 border-foreground bg-background shadow-[4px_4px_0_0_var(--foreground)]"
-            style={{
-              left: `${hoverPos.x}px`,
-              top: `${hoverPos.y}px`,
-              width: `${TOOLTIP_W}px`,
-              transform: `translate(max(calc(-100% + ${half}px), min(-${half}px, 0px)), calc(-100% - 8px))`,
-            }}
-          >
-            <div className="px-3 py-2 border-b-2 border-foreground font-mono font-bold text-xs whitespace-nowrap">
-              {formatDate(hoverCell.date)}
-            </div>
-            <div className="grid grid-cols-5 px-1 py-2">
-              {(["doors", "convos", "leads", "appts", "wins"] as Metric[]).map((m, i) => (
-                <div
-                  key={m}
-                  className={`flex flex-col items-center justify-center px-1 ${
-                    i > 0 ? "border-l border-foreground/20" : ""
-                  }`}
-                >
-                  <div className="text-base font-mono font-bold tabular-nums leading-none">
-                    {hoverCell[m]}
-                  </div>
-                  <div className="mt-1.5 text-[9px] font-mono font-bold uppercase tracking-[0.1em] text-muted-foreground">
-                    {METRIC_LABELS[m]}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      })()}
+      {!isMobile && !isTablet && hoverCell && hoverPos && (
+        <DesktopTooltip cell={hoverCell} pos={hoverPos} />
+      )}
     </section>
+  );
+}
+
+/* Desktop tooltip with edge-clamping so it never overflows the section */
+function DesktopTooltip({
+  cell,
+  pos,
+}: {
+  cell: Cell;
+  pos: { x: number; y: number };
+}) {
+  const TOOLTIP_W = 280;
+  const ref = useRef<HTMLDivElement>(null);
+  const [left, setLeft] = useState(pos.x - TOOLTIP_W / 2);
+
+  useEffect(() => {
+    const section = ref.current?.parentElement as HTMLElement | null;
+    const sectionWidth = section?.clientWidth ?? Infinity;
+    const PAD = 8;
+    let nextLeft = pos.x - TOOLTIP_W / 2;
+    if (nextLeft < PAD) nextLeft = PAD;
+    if (nextLeft + TOOLTIP_W > sectionWidth - PAD) {
+      nextLeft = sectionWidth - PAD - TOOLTIP_W;
+    }
+    setLeft(nextLeft);
+  }, [pos.x]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute z-20 pointer-events-none border-2 border-foreground bg-background shadow-[4px_4px_0_0_var(--foreground)]"
+      style={{
+        left: `${left}px`,
+        top: `${pos.y}px`,
+        width: `${TOOLTIP_W}px`,
+        transform: "translateY(calc(-100% - 8px))",
+      }}
+    >
+      <div className="px-3 py-2 border-b-2 border-foreground font-mono font-bold text-xs whitespace-nowrap">
+        {formatDate(cell.date)}
+      </div>
+      <div className="grid grid-cols-5 px-1 py-2">
+        {(["doors", "convos", "leads", "appts", "wins"] as Metric[]).map(
+          (m, i) => (
+            <div
+              key={m}
+              className={`flex flex-col items-center justify-center px-1 ${
+                i > 0 ? "border-l border-foreground/20" : ""
+              }`}
+            >
+              <div className="text-base font-mono font-bold tabular-nums leading-none">
+                {cell[m]}
+              </div>
+              <div className="mt-1.5 text-[9px] font-mono font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                {METRIC_LABELS[m]}
+              </div>
+            </div>
+          ),
+        )}
+      </div>
+    </div>
   );
 }
