@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatNumber } from "@/lib/format";
 import {
   buildYearOfActivity,
   colorStep,
