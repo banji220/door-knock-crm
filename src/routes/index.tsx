@@ -2,8 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 
-import { QuickLogCard } from "@/components/QuickLogCard";
-import { DailyMission } from "@/components/DailyMission";
 import { ActionSection } from "@/components/ActionSection";
 import { ActionItem } from "@/components/ActionItem";
 import {
