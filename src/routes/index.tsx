@@ -2,11 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Card, Button, Label, SectionHeader, Input, Badge } from "@/components/ui-brutal";
-import { mockKnocks, todayStats, type KnockOutcome } from "@/lib/mock-data";
-import { Check, X, Phone, FileText, HelpCircle, Plus } from "lucide-react";
+import {
+  mockKnocks, mockFollowUps, mockJobs, todayStats, type KnockOutcome,
+} from "@/lib/mock-data";
+import { Check, X, Phone, FileText, HelpCircle, Plus, Zap, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/")({
-  component: KnockPage,
+  component: TodayPage,
 });
 
 const outcomes: { key: KnockOutcome; label: string; icon: typeof Check; cls: string }[] = [
@@ -31,7 +33,7 @@ const badgeLabel: Record<KnockOutcome, string> = {
   "not-interested": "Pass",
 };
 
-function KnockPage() {
+function TodayPage() {
   const [address, setAddress] = useState("");
   const [knocks, setKnocks] = useState(mockKnocks);
   const [streetMode, setStreetMode] = useState("Oak Street");
@@ -46,10 +48,21 @@ function KnockPage() {
     if (navigator.vibrate) navigator.vibrate(20);
   };
 
+  const todayJobs = mockJobs.filter(
+    (j) => new Date(j.scheduledFor).toDateString() === new Date().toDateString(),
+  );
+  const overdueChase = mockFollowUps.filter((f) => {
+    const d = new Date(f.dueDate);
+    d.setHours(0, 0, 0, 0);
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    return d.getTime() <= t.getTime();
+  });
+
   return (
     <AppShell
-      title="Knock"
-      subtitle={`Today · ${streetMode}`}
+      title="Today"
+      subtitle={`${streetMode} · ${new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}`}
       right={
         <div className="text-right">
           <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-foreground/70">
@@ -72,24 +85,21 @@ function KnockPage() {
           <div className="text-3xl font-mono font-bold mt-1 leading-none">{todayStats.booked}</div>
         </Card>
         <Card className="p-3">
-          <Label className="text-[10px] tracking-[0.15em]">Pipeline</Label>
+          <Label className="text-[10px] tracking-[0.15em]">Pipe</Label>
           <div className="text-3xl font-mono font-bold mt-1 leading-none">£{todayStats.pipeline}</div>
         </Card>
       </div>
 
-      {/* Address input */}
+      {/* Quick log */}
+      <SectionHeader>Log A Knock</SectionHeader>
       <div className="mb-3">
-        <Label htmlFor="addr" className="mb-1">Door / Address</Label>
         <Input
-          id="addr"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           placeholder={`24 ${streetMode}`}
         />
       </div>
-
-      {/* Outcome buttons */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         {outcomes.map(({ key, label, icon: Icon, cls }) => (
           <button
             key={key}
@@ -111,24 +121,52 @@ function KnockPage() {
         Not Interested
       </Button>
 
-      {/* Recent knocks */}
-      <SectionHeader
-        count={knocks.length}
-        action={
-          <Link
-            to="/quote"
-            className="press-brutal inline-flex items-center gap-1 text-xs font-mono font-bold uppercase tracking-wider px-2 py-1 border-2 border-foreground bg-[var(--amber)] text-foreground"
-          >
-            <Plus className="size-3" strokeWidth={3} />
-            Quote
-          </Link>
-        }
-      >
-        Recent
-      </SectionHeader>
+      {/* Today's jobs */}
+      <SectionHeader count={todayJobs.length}>Jobs Today</SectionHeader>
+      <ul className="space-y-2 mb-6">
+        {todayJobs.map((j) => (
+          <Card as="li" key={j.id} className="p-3 flex items-center gap-3">
+            <div className="size-9 border-2 border-foreground bg-background flex items-center justify-center font-mono font-bold text-base shrink-0">
+              {j.routeOrder}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-mono font-bold uppercase text-sm leading-none">
+                {j.customerName}
+              </div>
+              <div className="flex items-center gap-1 mt-1 text-xs font-mono text-muted-foreground truncate">
+                <MapPin className="size-3" />{j.address}
+              </div>
+            </div>
+            <span className="font-mono font-bold text-lg">£{j.price}</span>
+          </Card>
+        ))}
+        {todayJobs.length === 0 && (
+          <Card as="li" className="border-dashed p-4 text-center">
+            <p className="font-mono text-xs text-muted-foreground uppercase">No jobs booked today</p>
+          </Card>
+        )}
+      </ul>
 
-      <ul className="space-y-2">
-        {knocks.slice(0, 12).map((k) => (
+      {/* Chase queue */}
+      <SectionHeader count={overdueChase.length}>Chase Queue</SectionHeader>
+      <ul className="space-y-2 mb-6">
+        {overdueChase.slice(0, 3).map((f) => (
+          <Card as="li" key={f.id} className="p-3">
+            <div className="flex items-baseline justify-between gap-2 mb-1">
+              <h3 className="font-mono font-bold uppercase text-sm">{f.leadName}</h3>
+              <Badge variant={f.priority === "high" ? "destructive" : "accent"}>
+                {f.priority}
+              </Badge>
+            </div>
+            <p className="text-xs font-mono text-muted-foreground">{f.reason}</p>
+          </Card>
+        ))}
+      </ul>
+
+      {/* Recent knocks */}
+      <SectionHeader count={knocks.length}>Recent Knocks</SectionHeader>
+      <ul className="space-y-2 mb-6">
+        {knocks.slice(0, 6).map((k) => (
           <Card as="li" key={k.id} className="px-3 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
               <div className="font-mono text-sm font-bold truncate">{k.address}</div>
@@ -141,15 +179,22 @@ function KnockPage() {
         ))}
       </ul>
 
-      {/* Street switch */}
+      {/* Street + Quote shortcut */}
       <SectionHeader>Current Street</SectionHeader>
-      <Card>
+      <Card className="mb-4">
         <input
           value={streetMode}
           onChange={(e) => setStreetMode(e.target.value)}
           className="w-full bg-transparent text-lg font-mono font-bold uppercase focus:outline-none"
         />
       </Card>
+      <Link
+        to="/quote"
+        className="press-brutal block w-full border-2 border-foreground bg-foreground text-background py-4 text-center font-mono font-bold uppercase tracking-wider"
+      >
+        <Plus className="inline size-5 mr-2 -mt-1" strokeWidth={3} />
+        New Quote
+      </Link>
     </AppShell>
   );
 }

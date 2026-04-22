@@ -36,7 +36,7 @@ function QuotePage() {
 
   const handleSave = () => {
     if (navigator.vibrate) navigator.vibrate(30);
-    navigate({ to: "/leads" });
+    navigate({ to: "/clients" });
   };
 
   return (
