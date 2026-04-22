@@ -110,18 +110,20 @@ export function ContributionHeatmap() {
   useEffect(() => setMounted(true), []);
 
   const isMobile = useIsMobile();
+  const breakpoint = useBreakpoint();
+  const isTablet = breakpoint === "tablet";
   const [metric, setMetric] = useState<Metric>("doors");
   const [range, setRange] = useState<Range>("90d");
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  /* Default range: 90d on mobile, 1y on desktop. Respects user override. */
+  /* Default range by breakpoint — mobile:90d, tablet:180d, desktop:1y. */
   const [rangeUserSet, setRangeUserSet] = useState(false);
   useEffect(() => {
     if (!mounted || rangeUserSet) return;
-    setRange(isMobile ? "90d" : "1y");
-  }, [mounted, isMobile, rangeUserSet]);
+    setRange(breakpoint === "mobile" ? "90d" : breakpoint === "tablet" ? "180d" : "1y");
+  }, [mounted, breakpoint, rangeUserSet]);
   const setRangeManual = (r: Range) => {
     setRangeUserSet(true);
     setRange(r);
