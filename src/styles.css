@@ -134,14 +134,14 @@
   --input: var(--foreground);
   --ring: var(--foreground);
 
-  /* Heatmap gradient — VIBRANT. Autumn leaves, hot coals, espresso.
-     Each step is an obvious jump in saturation and darkness. */
-  --heatmap-0: oklch(0.90 0.02 75);   /* empty — light warm grey */
-  --heatmap-1: oklch(0.82 0.12 85);   /* low — real yellow, visible */
-  --heatmap-2: oklch(0.73 0.18 70);   /* medium — bright orange-amber */
-  --heatmap-3: oklch(0.62 0.20 55);   /* good — rich burnt orange */
-  --heatmap-4: oklch(0.48 0.18 35);   /* high — deep red-brown */
-  --heatmap-5: oklch(0.35 0.14 30);   /* max — near-black chocolate with red undertone */
+  /* Heatmap gradient — VIBRANT. Punchy yellow → orange → red.
+     Each step is an obvious jump in saturation and hue. */
+  --heatmap-0: oklch(0.92 0.008 250); /* empty — slightly cool light grey so warm cells pop */
+  --heatmap-1: oklch(0.88 0.17 95);   /* low — bright warm yellow */
+  --heatmap-2: oklch(0.78 0.20 75);   /* medium — golden orange */
+  --heatmap-3: oklch(0.68 0.22 50);   /* good — saturated orange */
+  --heatmap-4: oklch(0.58 0.24 35);   /* high — strong red-orange */
+  --heatmap-5: oklch(0.50 0.26 28);   /* max — bold punchy red */
 
   --chart-1: var(--heatmap-2);
   --chart-2: var(--heatmap-3);
