@@ -328,7 +328,7 @@ function DealsPage() {
           address={selected.address}
           initialName={selected.name}
           initialPhone={selected.phone}
-          status={selected.stage as DetailStatus}
+          status={(selected.stage === "WON" ? "CUSTOMER" : selected.stage) as DetailStatus}
           onClose={() => setSelected(null)}
           onEditQuote={() => {
             const s = selected;
