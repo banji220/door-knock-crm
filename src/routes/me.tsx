@@ -9,7 +9,7 @@ import { DailyMission } from "@/components/DailyMission";
 import { WeeklyGoal } from "@/components/WeeklyGoal";
 import { WeeklyInsights } from "@/components/WeeklyInsights";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { buildYearOfActivity } from "@/lib/activity-data";
+import { buildYearOfActivity, computeStreaks } from "@/lib/activity-data";
 import { type DayStats, isoDate } from "@/lib/day-stats";
 
 export const Route = createFileRoute("/me")({
@@ -219,7 +219,7 @@ function MePage() {
       <ContributionHeatmap />
 
       {/* ===== Streak Panel ===== */}
-      <StreakPanel />
+      <StreakPanel currentStreak={streaks.current} longestStreak={streaks.best} />
 
       {/* ===== Momentum Meter ===== */}
       <MomentumMeter />
