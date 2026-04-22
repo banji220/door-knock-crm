@@ -229,22 +229,36 @@ function MePage() {
         </div>
 
         <div className="border-2 border-foreground bg-card p-3">
-          {/* Progress bar */}
+          {/* Progress bar — ink fill on cream track, stamped numerals */}
           <div
-            className="relative h-6 w-full bg-muted border-2 border-foreground overflow-hidden"
+            className="relative h-7 w-full heatmap-0 border-2 border-foreground overflow-hidden"
             role="progressbar"
             aria-valuenow={logged}
             aria-valuemin={0}
             aria-valuemax={target}
           >
+            {/* Filled portion */}
             <div
-              className={`h-full ${heatClass} transition-[width] duration-300`}
+              className="absolute inset-y-0 left-0 bg-foreground transition-[width] duration-300"
               style={{ width: `${pctClamp * 100}%` }}
             />
-            <div className="absolute inset-0 flex items-center justify-center text-xs font-mono font-bold tabular-nums text-foreground mix-blend-difference">
-              <span className="text-background">
-                {logged} / {target} doors
-              </span>
+            {/* Base label — ink on cream track */}
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums text-foreground">
+              {logged} / {target} doors
+            </div>
+            {/* Same label, clipped to the filled side — cream on ink */}
+            <div
+              className="absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-300"
+              style={{ width: `${pctClamp * 100}%` }}
+              aria-hidden
+            >
+              <div className="absolute inset-y-0 left-0 right-0 w-full flex items-center justify-center text-sm font-mono font-bold tabular-nums text-background"
+                style={{ width: "var(--bar-w, 100%)" }}
+              >
+                <span style={{ transform: "translateX(0)" }}>
+                  {logged} / {target} doors
+                </span>
+              </div>
             </div>
           </div>
 
