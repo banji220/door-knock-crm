@@ -199,13 +199,22 @@ function MePage() {
         </div>
       </section>
 
-      {/* ===== Goals + insights stack ===== */}
-      <div className="flex flex-col gap-4 mb-8">
+      {/* ===== Daily Mission ===== */}
+      <div className="mb-4">
         <DailyMission
           todayDoors={logged}
           target={dailyTarget}
           onTargetChange={setDailyTarget}
         />
+      </div>
+
+      {/* ===== Contribution Heatmap ===== */}
+      <div className="mb-4">
+        <ContributionHeatmap />
+      </div>
+
+      {/* ===== This Week stack ===== */}
+      <div className="flex flex-col gap-4 mb-8">
         <WeeklyGoal
           data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
           weeklyTarget={weeklyTarget}
@@ -216,9 +225,6 @@ function MePage() {
           weeklyTarget={weeklyTarget}
         />
       </div>
-
-      {/* ===== Contribution Heatmap ===== */}
-      <ContributionHeatmap />
 
       {/* ===== Streak Panel ===== */}
       <StreakPanel currentStreak={streaks.current} longestStreak={streaks.best} />
