@@ -267,14 +267,21 @@
     font-family: var(--font-mono);
   }
 
-  /* Heatmap progress — ONLY place gradients are allowed */
+  /* Heatmap — ONLY place gradients are allowed (progress, gamification) */
   .heatmap-bar {
     background-image: linear-gradient(
       to right,
-      oklch(0.6 0.05 60),
-      var(--amber),
-      var(--amber-deep),
-      var(--destructive)
+      var(--heatmap-1),
+      var(--heatmap-2),
+      var(--heatmap-3),
+      var(--heatmap-4),
+      var(--heatmap-5)
     );
   }
+  .heatmap-0 { background-color: var(--heatmap-0); }
+  .heatmap-1 { background-color: var(--heatmap-1); }
+  .heatmap-2 { background-color: var(--heatmap-2); }
+  .heatmap-3 { background-color: var(--heatmap-3); }
+  .heatmap-4 { background-color: var(--heatmap-4); }
+  .heatmap-5 { background-color: var(--heatmap-5); }
 }
