@@ -326,6 +326,8 @@ function MePage() {
       {/* ===== Momentum Meter ===== */}
       <MomentumMeter />
 
+      {/* ===== Badges ===== */}
+      <BadgesPanel />
 
       <div className="text-center pt-2 pb-4">
         <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
