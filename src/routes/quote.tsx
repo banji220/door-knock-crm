@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { z } from "zod";
 import { CaptureFlow, type CaptureData } from "@/components/CaptureFlow";
 
@@ -13,7 +13,7 @@ export const Route = createFileRoute("/quote")({
 });
 
 function QuotePage() {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { address, mode } = Route.useSearch();
 
   const handleSave = (step: number, data: CaptureData) => {
@@ -25,7 +25,15 @@ function QuotePage() {
     if (navigator.vibrate) navigator.vibrate(15);
   };
 
-  const handleClose = () => navigate({ to: "/" });
+  const handleClose = () => {
+    // Return to the previous page in history (Clients, Deals, Map, etc.)
+    // Fall back to home only if there's no history (e.g. deep-linked entry).
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.history.back();
+    } else {
+      router.navigate({ to: "/" });
+    }
+  };
 
   return (
     <CaptureFlow
