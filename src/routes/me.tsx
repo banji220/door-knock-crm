@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
+import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 
 export const Route = createFileRoute("/me")({
   component: MePage,
@@ -313,7 +314,10 @@ function MePage() {
         </div>
       </section>
 
-      {/* ===== Sign out ===== */}
+      {/* ===== Contribution Heatmap ===== */}
+      <ContributionHeatmap />
+
+
       <div className="text-center pt-2 pb-4">
         <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
           Sign out
