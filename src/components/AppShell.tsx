@@ -1,6 +1,8 @@
 import { ReactNode } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { PersistentMap } from "./PersistentMap";
 
 type AppShellProps = {
   title?: string;
@@ -13,11 +15,20 @@ type AppShellProps = {
   wide?: boolean;
 };
 
+/* Sidebar = 64 (w-64). Panel = 420px. */
+const SIDEBAR_W = 256;
+const PANEL_W = 420;
+
+/* Field routes get the persistent map + floating panel treatment on desktop.
+   Me page is its own wide dashboard (no map behind it). */
+const FIELD_ROUTES = new Set(["/", "/deals", "/map", "/clients"]);
+
 /* =========================================================================
    AppShell
    - Mobile  (<640):  full-width single column, sticky header, bottom nav.
    - Tablet  (640+):  centered max-w-2xl column, side-bordered.
-   - Desktop (≥1024): fixed left sidebar + wide main area. Bottom nav hidden.
+   - Desktop (≥1024): left sidebar nav + (field routes) persistent map base
+                     with left-anchored 420px panel; (other routes) wide dash.
    ========================================================================= */
 export function AppShell({
   title,
@@ -27,16 +38,43 @@ export function AppShell({
   children,
   wide = false,
 }: AppShellProps) {
-  const renderHeader = () =>
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isFieldRoute = FIELD_ROUTES.has(pathname);
+
+  const renderHeader = (forPanel = false) =>
     header ? (
-      <div className="sticky top-0 z-30 bg-card border-b-2 border-foreground">
+      <div
+        className={
+          forPanel
+            ? "bg-card border-b-2 border-foreground"
+            : "sticky top-0 z-30 bg-card border-b-2 border-foreground"
+        }
+      >
         {header}
       </div>
     ) : (
-      <header className="sticky top-0 z-30 bg-[var(--amber)] border-b-2 border-foreground">
-        <div className="flex items-center justify-between px-4 py-3 lg:px-8 lg:py-5">
+      <header
+        className={
+          forPanel
+            ? "bg-[var(--amber)] border-b-2 border-foreground"
+            : "sticky top-0 z-30 bg-[var(--amber)] border-b-2 border-foreground"
+        }
+      >
+        <div
+          className={
+            forPanel
+              ? "flex items-center justify-between px-5 py-4"
+              : "flex items-center justify-between px-4 py-3 lg:px-8 lg:py-5"
+          }
+        >
           <div>
-            <h1 className="text-3xl lg:text-4xl font-display font-bold uppercase text-foreground tracking-tight leading-none">
+            <h1
+              className={
+                forPanel
+                  ? "text-2xl font-display font-bold uppercase text-foreground tracking-tight leading-none"
+                  : "text-3xl lg:text-4xl font-display font-bold uppercase text-foreground tracking-tight leading-none"
+              }
+            >
               {title}
             </h1>
             {subtitle && (
@@ -66,19 +104,56 @@ export function AppShell({
         <BottomNav />
       </div>
 
-      {/* Desktop: sidebar + wide main */}
-      <div className="hidden lg:flex lg:flex-col min-h-screen lg:pl-64 bg-background">
-        {renderHeader()}
-        <main
-          className={
-            wide
-              ? "flex-1 px-8 py-8"
-              : "flex-1 px-8 py-8 max-w-7xl w-full mx-auto"
-          }
-        >
-          {children}
-        </main>
-      </div>
+      {/* ===================================================================
+          Desktop (≥1024)
+          =================================================================== */}
+      {isFieldRoute ? (
+        <DesktopFieldLayout
+          renderHeader={renderHeader}
+          children={children}
+        />
+      ) : (
+        <div className="hidden lg:flex lg:flex-col min-h-screen lg:pl-64 bg-background">
+          {renderHeader()}
+          <main
+            className={
+              wide
+                ? "flex-1 px-8 py-8"
+                : "flex-1 px-8 py-8 max-w-7xl w-full mx-auto"
+            }
+          >
+            {children}
+          </main>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Desktop field layout ----------------
+   Sidebar (256) | Panel (420) | Map (rest, persistent) */
+function DesktopFieldLayout({
+  renderHeader,
+  children,
+}: {
+  renderHeader: (forPanel?: boolean) => ReactNode;
+  children: ReactNode;
+}) {
+  const leftInset = SIDEBAR_W + PANEL_W;
+  return (
+    <div className="hidden lg:block">
+      {/* Persistent map fills the area to the right of sidebar+panel */}
+      <PersistentMap leftInset={leftInset} />
+
+      {/* Floating left-anchored drawer panel */}
+      <aside
+        className="fixed top-0 bottom-0 z-30 flex flex-col bg-background border-r-2 border-foreground shadow-[6px_0_0_0_color-mix(in_oklab,var(--foreground)_15%,transparent)]"
+        style={{ left: `${SIDEBAR_W}px`, width: `${PANEL_W}px` }}
+        aria-label="Route panel"
+      >
+        {renderHeader(true)}
+        <main className="flex-1 overflow-y-auto px-5 py-5">{children}</main>
+      </aside>
     </div>
   );
 }
@@ -99,13 +174,13 @@ type PageHeaderProps = {
 
 export function PageHeader({ eyebrow, title, meta, action }: PageHeaderProps) {
   return (
-    <div className="px-4 py-4 lg:px-8 lg:py-6">
+    <div className="px-4 py-4 lg:px-5 lg:py-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-primary">
             {eyebrow}
           </div>
-          <h1 className="mt-1 text-2xl lg:text-4xl font-display font-bold tracking-tight leading-tight text-foreground">
+          <h1 className="mt-1 text-2xl lg:text-3xl font-display font-bold tracking-tight leading-tight text-foreground">
             {title}
           </h1>
           {meta && (
