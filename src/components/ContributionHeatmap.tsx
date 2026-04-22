@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { formatNumber } from "@/lib/format";
@@ -117,6 +118,8 @@ export function ContributionHeatmap() {
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
+  const rangeMenuRef = useRef<HTMLDivElement>(null);
 
   /* Default range by breakpoint — mobile:90d, tablet:180d, desktop:1y. */
   const [rangeUserSet, setRangeUserSet] = useState(false);
@@ -127,7 +130,20 @@ export function ContributionHeatmap() {
   const setRangeManual = (r: Range) => {
     setRangeUserSet(true);
     setRange(r);
+    setRangeMenuOpen(false);
   };
+
+  /* Close range popover on outside click */
+  useEffect(() => {
+    if (!rangeMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!rangeMenuRef.current?.contains(e.target as Node)) {
+        setRangeMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [rangeMenuOpen]);
 
   const allDays = useMemo(() => buildYearOfActivity(), []);
   const { current: currentStreak, best: bestStreak } = useMemo(
@@ -201,17 +217,24 @@ export function ContributionHeatmap() {
         </div>
       </div>
 
-      {/* Controls */}
+      {/* Controls — tabs row + single timeframe button (popover on click) */}
       <div className="flex items-stretch gap-2 mb-3">
-        <div className="grid grid-cols-4 flex-1 border-2 border-foreground">
+        {/* Metric tabs: scroll horizontally on mobile, flex evenly otherwise.
+            Tabs never wrap; min-w-0 + whitespace-nowrap prevents collisions. */}
+        <div
+          className="flex-1 min-w-0 flex border-2 border-foreground overflow-x-auto sm:overflow-visible scrollbar-none"
+          role="tablist"
+          aria-label="Metric"
+        >
           {METRICS.map((m, i) => {
             const active = m.key === metric;
             return (
               <button
                 key={m.key}
                 type="button"
+                role="tab"
                 onClick={() => setMetric(m.key)}
-                className={`press-brutal py-2 text-xs font-mono font-bold uppercase tracking-wider active:translate-y-[2px] ${
+                className={`press-brutal flex-1 sm:flex-1 px-3 sm:px-2 lg:px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider whitespace-nowrap active:translate-y-[2px] ${
                   i > 0 ? "border-l-2 border-foreground" : ""
                 } ${active ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}
                 aria-pressed={active}
@@ -221,23 +244,50 @@ export function ContributionHeatmap() {
             );
           })}
         </div>
-        <div className="grid grid-cols-3 border-2 border-foreground shrink-0">
-          {RANGES.map((r, i) => {
-            const active = r.key === range;
-            return (
-              <button
-                key={r.key}
-                type="button"
-                onClick={() => setRangeManual(r.key)}
-                className={`press-brutal px-2.5 py-2 text-[10px] font-mono font-bold uppercase tracking-wider active:translate-y-[2px] ${
-                  i > 0 ? "border-l-2 border-foreground" : ""
-                } ${active ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}
-                aria-pressed={active}
-              >
-                {r.label}
-              </button>
-            );
-          })}
+
+        {/* Timeframe — single button shows current range; click opens popover */}
+        <div className="relative shrink-0" ref={rangeMenuRef}>
+          <button
+            type="button"
+            onClick={() => setRangeMenuOpen((o) => !o)}
+            aria-haspopup="listbox"
+            aria-expanded={rangeMenuOpen}
+            className="press-brutal h-full flex items-center gap-1.5 px-3 py-2 border-2 border-foreground bg-card text-xs font-mono font-bold uppercase tracking-wider active:translate-y-[2px]"
+          >
+            <span className="tabular-nums">
+              {RANGES.find((r) => r.key === range)?.label.toUpperCase()}
+            </span>
+            <ChevronDown
+              className={`size-3.5 transition-transform ${rangeMenuOpen ? "rotate-180" : ""}`}
+              strokeWidth={2.75}
+            />
+          </button>
+          {rangeMenuOpen && (
+            <div
+              role="listbox"
+              className="absolute right-0 top-[calc(100%+4px)] z-30 min-w-[7rem] border-2 border-foreground bg-card shadow-[4px_4px_0_0_var(--foreground)]"
+            >
+              {RANGES.map((r) => {
+                const active = r.key === range;
+                return (
+                  <button
+                    key={r.key}
+                    type="button"
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => setRangeManual(r.key)}
+                    className={`block w-full text-left px-3 py-2 text-xs font-mono font-bold uppercase tracking-wider border-b-2 border-foreground last:border-b-0 ${
+                      active
+                        ? "bg-foreground text-background"
+                        : "bg-card text-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
