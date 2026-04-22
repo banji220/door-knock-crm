@@ -133,7 +133,10 @@ export function buildYearOfActivity(): DayRecord[] {
     days[idx].appts = Math.max(1, Math.round(days[idx].leads * 0.4));
     days[idx].wins = Math.round(days[idx].appts * 0.5);
   }
-  const prevTotals = [8, 10, 7, 12, 9, 5, 11]; // sum 62
+  /* Prev 7 days. Index `breakIdx` (one of these days) gets zeroed below to
+     end the streak — its slot intentionally adds 10 of "lost" volume here so
+     the post-zero sum lands at ~62 (trend +18% vs thisWeek=73). */
+  const prevTotals = [8, 10, 7, 12, 9, 5, 11]; // raw sum 62; after break-zero ≈ 52
   for (let i = 0; i < 7; i++) {
     const idx = last7Start - 7 + i;
     days[idx].doors = prevTotals[i];
