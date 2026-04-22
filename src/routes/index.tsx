@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
-import { Button } from "@/components/ui-brutal";
+
 import { QuickLogCard } from "@/components/QuickLogCard";
 import { DailyMission } from "@/components/DailyMission";
 import { ActionSection } from "@/components/ActionSection";
@@ -202,10 +202,6 @@ function TodayPage() {
       </Link>
       {/* Spacer so the floating bottom nav doesn't clip last button */}
       <div className="h-2" aria-hidden />
-      {/* Hidden helper to satisfy unused-import linters in case Button is later removed */}
-      <span className="sr-only">
-        <Button variant="primary">x</Button>
-      </span>
     </AppShell>
   );
 }
