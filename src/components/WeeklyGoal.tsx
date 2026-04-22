@@ -191,9 +191,7 @@ function WeeklyGoalImpl({
                 ? `Need ${paceNeeded}/day to hit target`
                 : null}
           </p>
-        </div>
-      </div>
-    </section>
+    </div>
   );
 }
 
