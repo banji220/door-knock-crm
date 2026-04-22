@@ -230,16 +230,7 @@ function DealsPage() {
                 <DealRow
                   key={c.id}
                   card={c}
-                  onOpen={() => openHouse(c.address)}
-                  onCall={(e) => callPhone(e, c.phone)}
-                  onNav={(e) => navigateMaps(e, c.address)}
-                />
-              ))}
-            </ul>
-          )}
-        </Section>
-
-        {/* PIPELINE */}
+                  onOpen={() => openHouse(c)}
         <Section
           label="Pipeline"
           count={pipeline.length}
