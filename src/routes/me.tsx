@@ -124,66 +124,6 @@ function MePage() {
         ))}
       </div>
 
-      {/* ===== Quick Log ===== */}
-      <section className="mb-6">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            Quick Log
-          </span>
-          <span className="text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 border-2 border-foreground bg-card">
-            Today: {logged}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-4 gap-2">
-          {[1, 5, 10, 25].map((n) => {
-            const isFlashed = flashed === n;
-            return (
-              <button
-                key={n}
-                type="button"
-                onClick={() => handleLog(n)}
-                aria-label={`Log ${n} door${n === 1 ? "" : "s"}`}
-                className={`press-brutal border-2 border-foreground h-14 flex flex-col items-center justify-center gap-0.5 transition-colors duration-100 active:translate-y-[2px] ${
-                  isFlashed
-                    ? "bg-foreground text-background"
-                    : "bg-card text-foreground"
-                }`}
-              >
-                <span className="text-2xl font-bold font-mono leading-none">
-                  +{n}
-                </span>
-                <span
-                  className={`text-[9px] uppercase tracking-wider ${
-                    isFlashed ? "text-background/70" : "text-muted-foreground"
-                  }`}
-                >
-                  {n === 1 ? "door" : "doors"}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div
-          className={`mt-2 h-4 text-[11px] font-mono uppercase tracking-wider transition-opacity duration-200 ${
-            feedback ? "opacity-100 text-foreground" : "opacity-0"
-          }`}
-          aria-live="polite"
-        >
-          {feedback ?? " "}
-        </div>
-      </section>
-
-      {/* ===== Daily Mission ===== */}
-      <div className="mb-4">
-        <DailyMission
-          todayDoors={logged}
-          target={dailyTarget}
-          onTargetChange={setDailyTarget}
-        />
-      </div>
-
       {/* ===== Contribution Heatmap ===== */}
       <div className="mb-4">
         <ContributionHeatmap />
