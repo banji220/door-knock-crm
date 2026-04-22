@@ -68,7 +68,7 @@ function JobsPage() {
           return (
             <li
               key={job.id}
-              className={`border-brutal-thick shadow-brutal-sm p-4 ${cfg.bg}`}
+              className={`border-brutal-thick p-4 ${cfg.bg}`}
             >
               <div className="flex items-start gap-3">
                 <div className="size-10 border-2 border-ink bg-cream flex items-center justify-center font-display text-lg shrink-0">

@@ -92,7 +92,7 @@ function KnockPage() {
           <button
             key={key}
             onClick={() => logKnock(key)}
-            className={`press-brutal border-brutal-thick shadow-brutal py-5 flex flex-col items-center gap-2 ${cls}`}
+            className={`press-brutal border-brutal-thick py-5 flex flex-col items-center gap-2 ${cls}`}
           >
             <Icon className="size-7" strokeWidth={2.5} />
             <span className="font-display uppercase text-base">{label}</span>
@@ -100,7 +100,7 @@ function KnockPage() {
         ))}
         <button
           onClick={() => logKnock("not-interested")}
-          className="press-brutal border-brutal-thick shadow-brutal py-4 flex items-center justify-center gap-3 col-span-2 bg-destructive text-destructive-foreground"
+          className="press-brutal border-brutal-thick py-4 flex items-center justify-center gap-3 col-span-2 bg-destructive text-destructive-foreground"
         >
           <X className="size-6" strokeWidth={3} />
           <span className="font-display uppercase text-base">Not Interested</span>
