@@ -101,13 +101,27 @@ function formatDate(d: Date) {
 }
 
 export function ContributionHeatmap() {
+  /* Defer all date/viewport-derived rendering until after mount to avoid
+     SSR↔client hydration mismatches. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const isMobile = useIsMobile();
   const [metric, setMetric] = useState<Metric>("doors");
-  /* Mobile defaults to 90d; user can still flip to 1y */
-  const [range, setRange] = useState<Range>(isMobile ? "90d" : "1y");
+  const [range, setRange] = useState<Range>("1y");
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  /* When mobile is detected post-mount, default range to 90d (user can flip). */
+  const [rangeUserSet, setRangeUserSet] = useState(false);
+  useEffect(() => {
+    if (mounted && isMobile && !rangeUserSet) setRange("90d");
+  }, [mounted, isMobile, rangeUserSet]);
+  const setRangeManual = (r: Range) => {
+    setRangeUserSet(true);
+    setRange(r);
+  };
 
   const allDays = useMemo(() => buildYearOfActivity(), []);
   const { current: currentStreak, best: bestStreak } = useMemo(
