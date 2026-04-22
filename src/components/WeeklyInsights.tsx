@@ -236,7 +236,6 @@ function WeeklyInsightsImpl({
               </div>
             ))}
           </div>
-        </div>
     </div>
   );
 }
