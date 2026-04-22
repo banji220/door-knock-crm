@@ -111,30 +111,6 @@ function TodayPage() {
         />
       }
     >
-      {/* Quick bulk log */}
-      <QuickLogCard
-        onLog={(n) => {
-          const now = new Date().toISOString();
-          const additions = Array.from({ length: n }, (_, i) => ({
-            id: crypto.randomUUID(),
-            address: `Door ${knocks.length + i + 1}`,
-            outcome: "no-answer" as const,
-            timestamp: now,
-          }));
-          setKnocks([...additions, ...knocks]);
-        }}
-      />
-
-      {/* Daily mission tracker */}
-      <DailyMission
-        todayDoors={knocks.length}
-        target={DAILY_GOAL}
-        onTargetChange={() => {
-          /* Target editing lives on /me; this is a read-only view here. */
-        }}
-      />
-
-      {/* APPOINTMENTS TODAY */}
       <ActionSection label="Appointments Today" count={appointmentsToday.length}>
         {appointmentsToday.map((a) => (
           <li key={a.id}>
