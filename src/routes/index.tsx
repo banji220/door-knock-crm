@@ -1,14 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 
-import { QuickLogCard } from "@/components/QuickLogCard";
-import { DailyMission } from "@/components/DailyMission";
 import { ActionSection } from "@/components/ActionSection";
 import { ActionItem } from "@/components/ActionItem";
 import {
   mockKnocks, mockFollowUps, mockJobs, mockQuotes, mockAppointments,
-  mockLeads, todayStats, type Knock,
+  mockLeads, todayStats,
 } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
@@ -16,7 +14,6 @@ export const Route = createFileRoute("/")({
   component: TodayPage,
 });
 
-const DAILY_GOAL = 30;
 const MS_PER_DAY = 86_400_000;
 
 function isToday(iso: string): boolean {
@@ -43,7 +40,7 @@ function fmtTime(iso: string): string {
 }
 
 function TodayPage() {
-  const [knocks, setKnocks] = useState<Knock[]>(mockKnocks);
+  const knocks = mockKnocks;
 
   /* Sectioned data */
   const appointmentsToday = useMemo(
@@ -113,30 +110,6 @@ function TodayPage() {
         />
       }
     >
-      {/* Quick bulk log */}
-      <QuickLogCard
-        onLog={(n) => {
-          const now = new Date().toISOString();
-          const additions = Array.from({ length: n }, (_, i) => ({
-            id: crypto.randomUUID(),
-            address: `Door ${knocks.length + i + 1}`,
-            outcome: "no-answer" as const,
-            timestamp: now,
-          }));
-          setKnocks([...additions, ...knocks]);
-        }}
-      />
-
-      {/* Daily mission tracker */}
-      <DailyMission
-        todayDoors={knocks.length}
-        target={DAILY_GOAL}
-        onTargetChange={() => {
-          /* Target editing lives on /me; this is a read-only view here. */
-        }}
-      />
-
-      {/* APPOINTMENTS TODAY */}
       <ActionSection label="Appointments Today" count={appointmentsToday.length}>
         {appointmentsToday.map((a) => (
           <li key={a.id}>
