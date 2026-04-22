@@ -205,8 +205,8 @@ function MePage() {
           onTargetChange={setDailyTarget}
         />
         <WeeklyGoal
-          stats={statsMap}
-          target={weeklyTarget}
+          data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
+          weeklyTarget={weeklyTarget}
           onTargetChange={setWeeklyTarget}
         />
         <WeeklyInsights stats={statsMap} />

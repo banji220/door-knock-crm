@@ -1,28 +1,41 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  type DayStats,
-  addDays,
-  getDay,
-  isSameDate,
-  startOfWeek,
-} from "@/lib/day-stats";
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-type Props = {
-  stats: Record<string, DayStats>;
-  target: number;
-  onTargetChange: (n: number) => void;
+type DayActivity = {
+  doors: number;
+  conversations: number;
+  leads: number;
+  appointments: number;
+  wins: number;
 };
 
-const DAY_LABELS = ["M", "T", "W", "T", "F", "S", "S"] as const;
+interface WeeklyGoalProps {
+  data: Record<string, Partial<DayActivity>>;
+  weeklyTarget?: number;
+  onTargetChange?: (target: number) => void;
+}
 
-export function WeeklyGoal({ stats, target, onTargetChange }: Props) {
+function isoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function WeeklyGoalImpl({
+  data,
+  weeklyTarget = 150,
+  onTargetChange,
+}: WeeklyGoalProps) {
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(String(target));
+  const [draft, setDraft] = useState(String(weeklyTarget));
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    setDraft(String(target));
-  }, [target]);
 
   useEffect(() => {
     if (editing) {
@@ -31,178 +44,160 @@ export function WeeklyGoal({ stats, target, onTargetChange }: Props) {
     }
   }, [editing]);
 
-  const commit = () => {
-    const n = parseInt(draft, 10);
-    if (!isNaN(n) && n >= 1 && n <= 9999) onTargetChange(n);
-    setEditing(false);
-  };
-  const cancel = () => {
-    setDraft(String(target));
-    setEditing(false);
-  };
+  const startEdit = useCallback(() => {
+    setDraft(String(weeklyTarget));
+    setEditing(true);
+  }, [weeklyTarget]);
 
-  /* ---- Build the 7-day window: Monday → Sunday ---- */
-  const week = useMemo(() => {
+  const commitEdit = useCallback(() => {
+    const parsed = parseInt(draft, 10);
+    const next = isNaN(parsed)
+      ? weeklyTarget
+      : Math.min(9999, Math.max(1, parsed));
+    onTargetChange?.(next);
+    setEditing(false);
+  }, [draft, weeklyTarget, onTargetChange]);
+
+  const { total, percent, daysLeft, paceNeeded } = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const monday = startOfWeek(today);
+    const dow = today.getDay(); // 0 = Sunday
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - dow);
 
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = addDays(monday, i);
-      const isToday = isSameDate(date, today);
-      const isFuture = date.getTime() > today.getTime();
-      return {
-        date,
-        dow: i,
-        doors: getDay(stats, date).doors,
-        isToday,
-        isFuture,
-      };
-    });
-  }, [stats]);
+    const daysIncluded = dow + 1; // Sun→today inclusive
+    let sum = 0;
+    for (let i = 0; i < daysIncluded; i++) {
+      const d = new Date(sunday);
+      d.setDate(sunday.getDate() + i);
+      sum += data[isoDate(d)]?.doors ?? 0;
+    }
 
-  const weekTotal = week.reduce((s, d) => s + d.doors, 0);
-  const maxDay = Math.max(1, ...week.map((d) => d.doors));
-  const goalHit = weekTotal >= target;
-  const pct = target > 0 ? Math.min(100, (weekTotal / target) * 100) : 0;
+    const pct = Math.min(
+      Math.round((sum / Math.max(1, weeklyTarget)) * 100),
+      100,
+    );
+    const left = 7 - daysIncluded;
+    const pace =
+      left > 0 ? Math.max(Math.ceil((weeklyTarget - sum) / left), 0) : 0;
 
-  /* Days remaining including today (Mon..Sun → 7..1). */
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayIdx = (today.getDay() + 6) % 7; // Mon=0..Sun=6
-  const daysRemaining = 7 - todayIdx;
-  const weekEnded = daysRemaining <= 0;
-  const remainingTotal = Math.max(0, target - weekTotal);
-  const dailyAvgNeeded =
-    daysRemaining > 0 ? Math.max(0, Math.ceil(remainingTotal / daysRemaining)) : 0;
+    return { total: sum, percent: pct, daysLeft: left, paceNeeded: pace };
+  }, [data, weeklyTarget]);
 
-  let footer: string;
-  if (goalHit) {
-    footer = "✓ WEEKLY GOAL CRUSHED";
-  } else if (weekEnded) {
-    footer = `GOAL MISSED — ${target - weekTotal} SHORT`;
-  } else {
-    footer = `NEED ${dailyAvgNeeded}/DAY TO HIT GOAL`;
-  }
+  const done = percent >= 100;
 
   return (
-    <section className="border-2 border-foreground bg-card p-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
-          Weekly Goal
-        </span>
-
-        {editing ? (
-          <div className="flex items-center gap-1">
-            <input
-              ref={inputRef}
-              type="number"
-              min={1}
-              max={9999}
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commit();
-                if (e.key === "Escape") cancel();
-              }}
-              className="w-20 border-2 border-foreground bg-background font-mono font-bold text-xs px-2 py-1 focus:outline-none focus:bg-[var(--accent)] tabular-nums"
-            />
-            <button
-              type="button"
-              onClick={commit}
-              className="press-brutal text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 bg-foreground text-background hover:opacity-80"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={cancel}
-              className="press-brutal text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 bg-muted text-muted-foreground hover:opacity-80"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="press-brutal text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-1 bg-foreground text-background hover:opacity-80"
-          >
-            Edit
-          </button>
-        )}
-      </div>
-
-      {/* Big stat */}
-      <div className="mt-3 flex items-baseline gap-2 flex-wrap">
-        <span
-          className={`text-4xl font-bold tabular-nums tracking-tight leading-none ${
-            goalHit ? "text-primary" : "text-foreground"
+    <section className="w-full bg-background">
+      <div className="mx-auto max-w-5xl">
+        <div
+          className={`border-2 border-foreground px-4 py-4 sm:px-5 sm:py-5 transition-colors duration-300 ${
+            done ? "bg-foreground text-background" : "bg-card"
           }`}
         >
-          {weekTotal}
-        </span>
-        <span className="text-lg font-mono text-muted-foreground">
-          / {target} this week
-        </span>
-      </div>
+          {/* Row 1 — Header */}
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h2 className="text-base sm:text-lg font-bold tracking-tight uppercase">
+              Weekly Goal
+            </h2>
+            <span
+              className={`text-xs font-mono font-bold uppercase tracking-wider ${
+                done ? "opacity-80" : "text-muted-foreground"
+              }`}
+            >
+              {done ? "✓ Complete" : `${daysLeft}d left`}
+            </span>
+          </div>
 
-      {/* Progress */}
-      <div
-        className="mt-4 h-1.5 w-full bg-muted border-2 border-foreground overflow-hidden"
-        role="progressbar"
-        aria-valuenow={weekTotal}
-        aria-valuemin={0}
-        aria-valuemax={target}
-      >
-        <div
-          className={`h-full transition-all duration-500 ${
-            goalHit ? "bg-primary" : "bg-foreground"
-          }`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-
-      {/* 7-day mini chart */}
-      <div className="mt-4 grid grid-cols-7 gap-1">
-        {week.map((d, i) => {
-          const ratio = d.doors / maxDay;
-          const heightPx = d.doors > 0 ? Math.max(2, Math.round(ratio * 64)) : 2;
-          const barClass = d.isFuture
-            ? "bg-muted opacity-30"
-            : d.isToday
-              ? "bg-primary"
-              : d.doors > 0
-                ? "bg-foreground"
-                : "bg-muted";
-          return (
-            <div key={i} className="flex flex-col items-center">
-              <div className="h-16 w-full flex items-end">
-                <div
-                  className={`w-full transition-all duration-500 ${barClass}`}
-                  style={{ height: `${heightPx}px` }}
-                  aria-label={`${d.doors} doors`}
+          {/* Row 2 — Big number */}
+          <div className="flex items-baseline gap-2 mb-2 sm:mb-3">
+            <span className="text-3xl sm:text-5xl font-bold font-mono tabular-nums">
+              {total}
+            </span>
+            <span
+              className={`text-sm font-mono flex items-baseline gap-1 ${
+                done ? "opacity-60" : "text-muted-foreground"
+              }`}
+            >
+              <span>/</span>
+              {editing ? (
+                <input
+                  ref={inputRef}
+                  type="number"
+                  min={1}
+                  max={9999}
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  onBlur={commitEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitEdit();
+                    if (e.key === "Escape") setEditing(false);
+                  }}
+                  className="w-16 bg-transparent border-b-2 border-current text-sm font-mono font-bold tabular-nums outline-none text-inherit px-0 py-0 appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-              </div>
-              <span
-                className={`mt-1 text-[9px] font-mono uppercase tabular-nums ${
-                  d.isToday
-                    ? "text-primary font-bold"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {DAY_LABELS[i]}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  className={`font-bold border-b border-dashed border-current cursor-pointer hover:opacity-70 transition-opacity ${
+                    done ? "text-background" : "text-foreground"
+                  }`}
+                >
+                  {weeklyTarget}
+                </button>
+              )}
+              <span>doors</span>
+            </span>
+            <span
+              className={`ml-auto text-2xl font-bold font-mono tabular-nums ${
+                done ? "opacity-80" : ""
+              }`}
+            >
+              {percent}%
+            </span>
+          </div>
 
-      {/* Footer */}
-      <p className="mt-4 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-        {footer}
-      </p>
+          {/* Row 3 — Progress bar */}
+          <div
+            className={`relative h-3 w-full overflow-hidden ${
+              done ? "bg-background/20" : "bg-muted"
+            }`}
+            role="progressbar"
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div
+              className="h-full transition-[width] duration-300 ease-out"
+              style={{
+                width: `${percent}%`,
+                backgroundColor: done
+                  ? "var(--background)"
+                  : percent > 60
+                    ? "var(--heatmap-4)"
+                    : percent > 30
+                      ? "var(--heatmap-3)"
+                      : "var(--heatmap-2)",
+              }}
+            />
+          </div>
+
+          {/* Row 4 — Footer */}
+          <p
+            className={`text-xs font-mono mt-2 ${
+              done ? "opacity-60" : "text-muted-foreground"
+            }`}
+          >
+            {done
+              ? "Goal reached. Keep stacking."
+              : daysLeft > 0
+                ? `Need ${paceNeeded}/day to hit target`
+                : null}
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
+
+export const WeeklyGoal = memo(WeeklyGoalImpl);
+export default WeeklyGoal;
