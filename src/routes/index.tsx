@@ -40,7 +40,7 @@ function fmtTime(iso: string): string {
 }
 
 function TodayPage() {
-  const [knocks, setKnocks] = useState<Knock[]>(mockKnocks);
+  const knocks = mockKnocks;
 
   /* Sectioned data */
   const appointmentsToday = useMemo(
