@@ -34,7 +34,14 @@ export function AppShell({ title, subtitle, right, header, children }: AppShellP
           </div>
         </header>
       )}
-      <main className="flex-1 pb-28 px-4 pt-4">{children}</main>
+      <main
+        className="flex-1 px-4 pt-4"
+        style={{
+          paddingBottom: "calc(7rem + env(safe-area-inset-bottom))",
+        }}
+      >
+        {children}
+      </main>
       <BottomNav />
     </div>
   );
