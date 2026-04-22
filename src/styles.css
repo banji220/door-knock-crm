@@ -81,88 +81,113 @@
   --shadow-inner: 0 0 #0000;
 }
 
+@theme inline {
+  /* Heatmap scale — exposed as Tailwind utilities */
+  --color-heatmap-0: var(--heatmap-0);
+  --color-heatmap-1: var(--heatmap-1);
+  --color-heatmap-2: var(--heatmap-2);
+  --color-heatmap-3: var(--heatmap-3);
+  --color-heatmap-4: var(--heatmap-4);
+  --color-heatmap-5: var(--heatmap-5);
+}
+
 :root {
   --radius: 0px;
 
-  /* Core warm palette */
-  --cream: oklch(0.971 0.018 85);
-  --ink: oklch(0.18 0.025 60);
-  --amber: oklch(0.78 0.16 70);
-  --amber-deep: oklch(0.62 0.19 50);
+  /* Locked OKLCH palette */
+  --background: oklch(0.97 0.005 80);       /* warm off-white paper */
+  --foreground: oklch(0.15 0.02 50);        /* near-black ink */
+  --card: oklch(0.95 0.01 75);              /* slightly warm card */
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
 
-  --background: var(--cream);
-  --foreground: var(--ink);
+  --primary: oklch(0.55 0.12 45);           /* warm amber-brown */
+  --primary-foreground: oklch(0.98 0.005 80);
 
-  --card: oklch(0.985 0.012 85);
-  --card-foreground: var(--ink);
+  --secondary: oklch(0.90 0.04 75);
+  --secondary-foreground: var(--foreground);
 
-  --popover: oklch(0.985 0.012 85);
-  --popover-foreground: var(--ink);
+  --muted: oklch(0.92 0.015 75);
+  --muted-foreground: oklch(0.55 0.02 60);
 
-  --primary: var(--amber-deep);
-  --primary-foreground: oklch(0.99 0.005 85);
+  --accent: oklch(0.90 0.04 75);            /* soft warm accent */
+  --accent-foreground: var(--foreground);
 
-  --secondary: oklch(0.93 0.025 80);
-  --secondary-foreground: var(--ink);
-
-  --muted: oklch(0.93 0.02 80);
-  --muted-foreground: oklch(0.4 0.03 60);
-
-  --accent: var(--amber);
-  --accent-foreground: var(--ink);
-
-  --destructive: oklch(0.55 0.22 28);
-  --destructive-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.55 0.2 25);        /* warm red */
+  --destructive-foreground: oklch(0.98 0.005 80);
 
   --success: oklch(0.5 0.13 150);
-  --success-foreground: oklch(0.99 0 0);
+  --success-foreground: oklch(0.98 0.005 80);
 
   --warning: oklch(0.78 0.16 80);
-  --warning-foreground: var(--ink);
+  --warning-foreground: var(--foreground);
 
-  /* Borders are ALWAYS ink (foreground), never light grey. */
-  --border: var(--ink);
-  --input: var(--ink);
-  --ring: var(--ink);
+  /* Aliases used across the app */
+  --cream: var(--background);
+  --ink: var(--foreground);
+  --amber: oklch(0.72 0.16 65);             /* heatmap-3 — used as accent */
+  --amber-deep: var(--primary);
 
-  --chart-1: var(--amber-deep);
-  --chart-2: var(--success);
-  --chart-3: var(--destructive);
-  --chart-4: var(--amber);
-  --chart-5: oklch(0.45 0.05 60);
+  /* Borders are ink. Inputs/ring are ink. */
+  --border: oklch(0.80 0.02 70);
+  --input: var(--foreground);
+  --ring: var(--foreground);
 
-  --sidebar: var(--cream);
-  --sidebar-foreground: var(--ink);
-  --sidebar-primary: var(--amber-deep);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: var(--amber);
-  --sidebar-accent-foreground: var(--ink);
-  --sidebar-border: var(--ink);
-  --sidebar-ring: var(--ink);
+  /* Heatmap (progress / gamification — only place gradients allowed) */
+  --heatmap-0: oklch(0.92 0.01 80);
+  --heatmap-1: oklch(0.88 0.06 80);
+  --heatmap-2: oklch(0.82 0.14 78);
+  --heatmap-3: oklch(0.72 0.16 65);
+  --heatmap-4: oklch(0.58 0.14 45);
+  --heatmap-5: oklch(0.42 0.12 35);
+
+  --chart-1: var(--heatmap-2);
+  --chart-2: var(--heatmap-3);
+  --chart-3: var(--heatmap-4);
+  --chart-4: var(--heatmap-5);
+  --chart-5: var(--destructive);
+
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--foreground);
+  --sidebar-ring: var(--foreground);
 }
 
 .dark {
   --background: oklch(0.18 0.02 60);
-  --foreground: var(--cream);
+  --foreground: oklch(0.97 0.005 80);
   --card: oklch(0.22 0.025 60);
-  --card-foreground: var(--cream);
-  --popover: oklch(0.22 0.025 60);
-  --popover-foreground: var(--cream);
-  --primary: var(--amber);
-  --primary-foreground: var(--ink);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.72 0.16 65);
+  --primary-foreground: oklch(0.15 0.02 50);
   --secondary: oklch(0.28 0.03 60);
-  --secondary-foreground: var(--cream);
+  --secondary-foreground: var(--foreground);
   --muted: oklch(0.28 0.03 60);
   --muted-foreground: oklch(0.75 0.03 70);
-  --accent: var(--amber);
-  --accent-foreground: var(--ink);
+  --accent: oklch(0.32 0.04 65);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.65 0.22 28);
-  --destructive-foreground: oklch(0.99 0 0);
+  --destructive-foreground: oklch(0.98 0.005 80);
   --success: oklch(0.65 0.15 150);
-  --success-foreground: var(--ink);
-  --border: var(--cream);
-  --input: var(--cream);
-  --ring: var(--cream);
+  --success-foreground: oklch(0.15 0.02 50);
+  --border: oklch(0.45 0.02 60);
+  --input: var(--foreground);
+  --ring: var(--foreground);
+
+  /* Heatmap stays the same — luminance reads on dark too */
+  --heatmap-0: oklch(0.32 0.02 70);
+  --heatmap-1: oklch(0.42 0.06 75);
+  --heatmap-2: oklch(0.55 0.13 75);
+  --heatmap-3: oklch(0.68 0.16 65);
+  --heatmap-4: oklch(0.78 0.14 55);
+  --heatmap-5: oklch(0.88 0.10 70);
 }
 
 @layer base {
