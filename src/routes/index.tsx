@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card, Button, Label, SectionHeader, Input, Badge } from "@/components/ui-brutal";
+import { QuickLogCard } from "@/components/QuickLogCard";
 import {
   mockKnocks, mockFollowUps, mockJobs, todayStats, type KnockOutcome,
 } from "@/lib/mock-data";
@@ -107,8 +108,22 @@ function TodayPage() {
         </Card>
       </div>
 
-      {/* Quick log */}
-      <SectionHeader>Log A Knock</SectionHeader>
+      {/* Quick bulk log — fast +N when knocking many doors */}
+      <QuickLogCard
+        onLog={(n) => {
+          const now = new Date().toISOString();
+          const additions = Array.from({ length: n }, (_, i) => ({
+            id: crypto.randomUUID(),
+            address: `Door ${knocks.length + i + 1}, ${streetMode}`,
+            outcome: "no-answer" as const,
+            timestamp: now,
+          }));
+          setKnocks([...additions, ...knocks]);
+        }}
+      />
+
+      {/* Detailed log */}
+      <SectionHeader>Log With Outcome</SectionHeader>
       <div className="mb-3">
         <Input
           value={address}
