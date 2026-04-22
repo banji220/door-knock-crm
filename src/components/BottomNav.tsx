@@ -20,7 +20,7 @@ const items: Item[] = [
 export function BottomNav() {
   const { pathname } = useLocation();
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 max-w-[480px] mx-auto bg-card border-t-2 border-foreground">
+    <nav className="fixed bottom-0 inset-x-0 z-50 max-w-md mx-auto bg-card border-t-2 border-foreground sm:border-x-2 sm:border-foreground">
       <ul className="grid grid-cols-5 items-end">
         {items.map(({ to, label, icon: Icon, badge, center }) => {
           const active = pathname === to;
