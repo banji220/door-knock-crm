@@ -312,7 +312,7 @@ function DealsPage() {
                     key={c.id}
                     card={c}
                     subLabel={`Won ${timeAgoLabel(c.daysSince)}`}
-                    onOpen={() => openHouse(c.address)}
+                    onOpen={() => openHouse(c)}
                     onCall={(e) => callPhone(e, c.phone)}
                     onNav={(e) => navigateMaps(e, c.address)}
                   />
@@ -322,6 +322,21 @@ function DealsPage() {
           )}
         </section>
       </div>
+
+      {selected && (
+        <HouseDetail
+          address={selected.address}
+          initialName={selected.name}
+          initialPhone={selected.phone}
+          status={selected.stage as DetailStatus}
+          onClose={() => setSelected(null)}
+          onEditQuote={() => {
+            const s = selected;
+            setSelected(null);
+            navigate({ to: "/quote", search: { address: s.address, mode: "quote" } });
+          }}
+        />
+      )}
     </AppShell>
   );
 }
