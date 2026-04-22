@@ -10,9 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as QuoteRouteImport } from './routes/quote'
-import { Route as LeadsRouteImport } from './routes/leads'
-import { Route as JobsRouteImport } from './routes/jobs'
-import { Route as FollowUpsRouteImport } from './routes/follow-ups'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as MapRouteImport } from './routes/map'
+import { Route as DealsRouteImport } from './routes/deals'
+import { Route as ClientsRouteImport } from './routes/clients'
 import { Route as IndexRouteImport } from './routes/index'
 
 const QuoteRoute = QuoteRouteImport.update({
@@ -20,19 +21,24 @@ const QuoteRoute = QuoteRouteImport.update({
   path: '/quote',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LeadsRoute = LeadsRouteImport.update({
-  id: '/leads',
-  path: '/leads',
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JobsRoute = JobsRouteImport.update({
-  id: '/jobs',
-  path: '/jobs',
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FollowUpsRoute = FollowUpsRouteImport.update({
-  id: '/follow-ups',
-  path: '/follow-ups',
+const DealsRoute = DealsRouteImport.update({
+  id: '/deals',
+  path: '/deals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsRoute = ClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -43,39 +49,43 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/follow-ups': typeof FollowUpsRoute
-  '/jobs': typeof JobsRoute
-  '/leads': typeof LeadsRoute
+  '/clients': typeof ClientsRoute
+  '/deals': typeof DealsRoute
+  '/map': typeof MapRoute
+  '/me': typeof MeRoute
   '/quote': typeof QuoteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/follow-ups': typeof FollowUpsRoute
-  '/jobs': typeof JobsRoute
-  '/leads': typeof LeadsRoute
+  '/clients': typeof ClientsRoute
+  '/deals': typeof DealsRoute
+  '/map': typeof MapRoute
+  '/me': typeof MeRoute
   '/quote': typeof QuoteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/follow-ups': typeof FollowUpsRoute
-  '/jobs': typeof JobsRoute
-  '/leads': typeof LeadsRoute
+  '/clients': typeof ClientsRoute
+  '/deals': typeof DealsRoute
+  '/map': typeof MapRoute
+  '/me': typeof MeRoute
   '/quote': typeof QuoteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/follow-ups' | '/jobs' | '/leads' | '/quote'
+  fullPaths: '/' | '/clients' | '/deals' | '/map' | '/me' | '/quote'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/follow-ups' | '/jobs' | '/leads' | '/quote'
-  id: '__root__' | '/' | '/follow-ups' | '/jobs' | '/leads' | '/quote'
+  to: '/' | '/clients' | '/deals' | '/map' | '/me' | '/quote'
+  id: '__root__' | '/' | '/clients' | '/deals' | '/map' | '/me' | '/quote'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  FollowUpsRoute: typeof FollowUpsRoute
-  JobsRoute: typeof JobsRoute
-  LeadsRoute: typeof LeadsRoute
+  ClientsRoute: typeof ClientsRoute
+  DealsRoute: typeof DealsRoute
+  MapRoute: typeof MapRoute
+  MeRoute: typeof MeRoute
   QuoteRoute: typeof QuoteRoute
 }
 
@@ -88,25 +98,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuoteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/leads': {
-      id: '/leads'
-      path: '/leads'
-      fullPath: '/leads'
-      preLoaderRoute: typeof LeadsRouteImport
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/jobs': {
-      id: '/jobs'
-      path: '/jobs'
-      fullPath: '/jobs'
-      preLoaderRoute: typeof JobsRouteImport
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/follow-ups': {
-      id: '/follow-ups'
-      path: '/follow-ups'
-      fullPath: '/follow-ups'
-      preLoaderRoute: typeof FollowUpsRouteImport
+    '/deals': {
+      id: '/deals'
+      path: '/deals'
+      fullPath: '/deals'
+      preLoaderRoute: typeof DealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients': {
+      id: '/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ClientsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -121,9 +138,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  FollowUpsRoute: FollowUpsRoute,
-  JobsRoute: JobsRoute,
-  LeadsRoute: LeadsRoute,
+  ClientsRoute: ClientsRoute,
+  DealsRoute: DealsRoute,
+  MapRoute: MapRoute,
+  MeRoute: MeRoute,
   QuoteRoute: QuoteRoute,
 }
 export const routeTree = rootRouteImport

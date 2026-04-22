@@ -5,8 +5,8 @@ import { Card, Badge, Input, SectionHeader } from "@/components/ui-brutal";
 import { mockLeads, type Lead } from "@/lib/mock-data";
 import { Search, Phone, MapPin } from "lucide-react";
 
-export const Route = createFileRoute("/leads")({
-  component: LeadsPage,
+export const Route = createFileRoute("/clients")({
+  component: ClientsPage,
 });
 
 const statusOrder: Lead["status"][] = ["hot", "warm", "cold", "won", "lost"];
@@ -19,7 +19,7 @@ const statusVariant: Record<Lead["status"], "destructive" | "accent" | "default"
   lost: "default",
 };
 
-function LeadsPage() {
+function ClientsPage() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<Lead["status"] | "all">("all");
 
@@ -44,8 +44,7 @@ function LeadsPage() {
   }, []);
 
   return (
-    <AppShell title="Leads" subtitle={`${mockLeads.length} total`}>
-      {/* Search */}
+    <AppShell title="Clients" subtitle={`${mockLeads.length} total`}>
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none z-10" />
         <Input
@@ -56,7 +55,6 @@ function LeadsPage() {
         />
       </div>
 
-      {/* Filter chips */}
       <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 -mx-4 px-4">
         {(["all", ...statusOrder] as const).map((s) => (
           <button
@@ -84,9 +82,7 @@ function LeadsPage() {
                 <h3 className="font-mono font-bold uppercase text-sm leading-none truncate">
                   {lead.name}
                 </h3>
-                <Badge variant={statusVariant[lead.status]}>
-                  {lead.status}
-                </Badge>
+                <Badge variant={statusVariant[lead.status]}>{lead.status}</Badge>
               </div>
               <div className="flex items-center gap-1 mt-1 text-xs font-mono text-muted-foreground truncate">
                 <MapPin className="size-3 shrink-0" />
