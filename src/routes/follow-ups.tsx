@@ -49,7 +49,7 @@ function FollowUpsPage() {
           return (
             <li
               key={f.id}
-              className={`border-brutal-thick shadow-brutal-sm bg-card p-4 ${
+              className={`border-brutal-thick bg-card p-4 ${
                 isOverdue ? "bg-destructive/10" : ""
               }`}
             >

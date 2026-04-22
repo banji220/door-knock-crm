@@ -5,19 +5,22 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Giraffe CRM — Brutalist Warm
+ * Giraffe CRM — Brutalist Warm v2
  * Field weapon UI for door-knocking window cleaners.
- * High contrast, heavy borders, big tap targets, sun-readable.
+ * RULES: Square corners only. 2px ink borders. No shadows / elevation.
+ *        No rounded pills. No gradients on UI. Space Grotesk + Space Mono only.
  */
 
 @theme inline {
+  /* All radii are 0. Squared everything. */
   --radius-sm: 0px;
-  --radius-md: 2px;
-  --radius-lg: 4px;
-  --radius-xl: 6px;
-  --radius-2xl: 8px;
-  --radius-3xl: 12px;
-  --radius-4xl: 16px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+  --radius-full: 0px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -61,22 +64,30 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-display: "Archivo Black", "Arial Black", system-ui, sans-serif;
-  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Type system — Space Grotesk + Space Mono ONLY */
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, monospace;
 
-  --shadow-brutal: 4px 4px 0 0 var(--ink);
-  --shadow-brutal-sm: 2px 2px 0 0 var(--ink);
-  --shadow-brutal-lg: 6px 6px 0 0 var(--ink);
+  /* No elevation. Shadows neutralized everywhere. */
+  --shadow-2xs: 0 0 #0000;
+  --shadow-xs: 0 0 #0000;
+  --shadow-sm: 0 0 #0000;
+  --shadow: 0 0 #0000;
+  --shadow-md: 0 0 #0000;
+  --shadow-lg: 0 0 #0000;
+  --shadow-xl: 0 0 #0000;
+  --shadow-2xl: 0 0 #0000;
+  --shadow-inner: 0 0 #0000;
 }
 
 :root {
-  --radius: 4px;
+  --radius: 0px;
 
   /* Core warm palette */
   --cream: oklch(0.971 0.018 85);
   --ink: oklch(0.18 0.025 60);
-  --amber: oklch(0.74 0.165 65);
+  --amber: oklch(0.78 0.16 70);
   --amber-deep: oklch(0.62 0.19 50);
 
   --background: var(--cream);
@@ -95,7 +106,7 @@
   --secondary-foreground: var(--ink);
 
   --muted: oklch(0.93 0.02 80);
-  --muted-foreground: oklch(0.45 0.03 60);
+  --muted-foreground: oklch(0.4 0.03 60);
 
   --accent: var(--amber);
   --accent-foreground: var(--ink);
@@ -109,9 +120,10 @@
   --warning: oklch(0.78 0.16 80);
   --warning-foreground: var(--ink);
 
+  /* Borders are ALWAYS ink (foreground), never light grey. */
   --border: var(--ink);
-  --input: oklch(0.88 0.02 80);
-  --ring: var(--amber-deep);
+  --input: var(--ink);
+  --ring: var(--ink);
 
   --chart-1: var(--amber-deep);
   --chart-2: var(--success);
@@ -126,7 +138,7 @@
   --sidebar-accent: var(--amber);
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--ink);
-  --sidebar-ring: var(--amber-deep);
+  --sidebar-ring: var(--ink);
 }
 
 .dark {
@@ -141,7 +153,7 @@
   --secondary: oklch(0.28 0.03 60);
   --secondary-foreground: var(--cream);
   --muted: oklch(0.28 0.03 60);
-  --muted-foreground: oklch(0.7 0.03 70);
+  --muted-foreground: oklch(0.75 0.03 70);
   --accent: var(--amber);
   --accent-foreground: var(--ink);
   --destructive: oklch(0.65 0.22 28);
@@ -149,13 +161,16 @@
   --success: oklch(0.65 0.15 150);
   --success-foreground: var(--ink);
   --border: var(--cream);
-  --input: oklch(0.3 0.03 60);
-  --ring: var(--amber);
+  --input: var(--cream);
+  --ring: var(--cream);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
+    /* Kill any inherited shadow + force square corners */
+    border-radius: 0 !important;
+    box-shadow: none !important;
   }
 
   html, body {
@@ -173,14 +188,15 @@
         0deg,
         transparent,
         transparent 31px,
-        oklch(0.18 0.025 60 / 0.04) 31px,
-        oklch(0.18 0.025 60 / 0.04) 32px
+        oklch(0.18 0.025 60 / 0.05) 31px,
+        oklch(0.18 0.025 60 / 0.05) 32px
       );
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: -0.03em;
     line-height: 0.95;
   }
 
@@ -191,45 +207,49 @@
 }
 
 @layer utilities {
+  /* Borders always 2px minimum, always ink. */
   .border-brutal {
     border: 2px solid var(--ink);
   }
   .border-brutal-thick {
     border: 3px solid var(--ink);
   }
-  .shadow-brutal {
-    box-shadow: 4px 4px 0 0 var(--ink);
-  }
-  .shadow-brutal-sm {
-    box-shadow: 2px 2px 0 0 var(--ink);
-  }
+
+  /* No-op shadow utilities (back-compat) — explicitly empty */
+  .shadow-brutal,
+  .shadow-brutal-sm,
   .shadow-brutal-lg {
-    box-shadow: 6px 6px 0 0 var(--ink);
+    box-shadow: none;
   }
+
+  /* Press feedback — flat translation, no shadow play */
   .press-brutal {
-    transition: transform 0.05s ease, box-shadow 0.05s ease;
+    transition: transform 0.05s ease, background-color 0.1s ease;
   }
   .press-brutal:active {
     transform: translate(2px, 2px);
-    box-shadow: 2px 2px 0 0 var(--ink) !important;
   }
   .press-brutal-lg:active {
-    transform: translate(4px, 4px);
-    box-shadow: 0 0 0 0 var(--ink) !important;
+    transform: translate(3px, 3px);
   }
+
   .font-display {
     font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
   .font-mono {
     font-family: var(--font-mono);
   }
-  .stripe-amber {
-    background-image: repeating-linear-gradient(
-      45deg,
+
+  /* Heatmap progress — ONLY place gradients are allowed */
+  .heatmap-bar {
+    background-image: linear-gradient(
+      to right,
+      oklch(0.6 0.05 60),
       var(--amber),
-      var(--amber) 8px,
-      var(--amber-deep) 8px,
-      var(--amber-deep) 16px
+      var(--amber-deep),
+      var(--destructive)
     );
   }
 }

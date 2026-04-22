@@ -41,7 +41,7 @@ function QuotePage() {
   return (
     <AppShell title="Quote" subtitle="30 seconds flat">
       {/* Live price card */}
-      <div className="border-brutal-thick shadow-brutal-lg bg-amber p-5 mb-5 relative overflow-hidden">
+      <div className="border-brutal-thick bg-amber p-5 mb-5 relative overflow-hidden">
         <div className="absolute top-2 right-3 text-[10px] font-mono uppercase tracking-wider text-ink/70">
           Live · {frequency}
         </div>
@@ -137,7 +137,7 @@ function QuotePage() {
               key={f.key}
               onClick={() => setFrequency(f.key)}
               className={`py-3 border-brutal-thick font-display uppercase text-sm press-brutal ${
-                frequency === f.key ? "bg-ink text-cream shadow-brutal-sm" : "bg-card"
+                frequency === f.key ? "bg-ink text-cream" : "bg-card"
               }`}
             >
               {f.label}
@@ -155,7 +155,7 @@ function QuotePage() {
           <button
             onClick={() => setExtras({ ...extras, conservatory: !extras.conservatory })}
             className={`py-3 border-brutal-thick font-display uppercase text-sm press-brutal ${
-              extras.conservatory ? "bg-amber shadow-brutal-sm" : "bg-card"
+              extras.conservatory ? "bg-amber" : "bg-card"
             }`}
           >
             + Conservatory £10
@@ -163,7 +163,7 @@ function QuotePage() {
           <button
             onClick={() => setExtras({ ...extras, frames: !extras.frames })}
             className={`py-3 border-brutal-thick font-display uppercase text-sm press-brutal ${
-              extras.frames ? "bg-amber shadow-brutal-sm" : "bg-card"
+              extras.frames ? "bg-amber" : "bg-card"
             }`}
           >
             + Frames £8
@@ -175,14 +175,14 @@ function QuotePage() {
       <div className="grid grid-cols-2 gap-3 sticky bottom-24">
         <button
           onClick={handleSave}
-          className="border-brutal-thick shadow-brutal bg-cream press-brutal py-4 flex items-center justify-center gap-2 font-display uppercase"
+          className="border-brutal-thick bg-cream press-brutal py-4 flex items-center justify-center gap-2 font-display uppercase"
         >
           <Save className="size-5" strokeWidth={2.5} />
           Save
         </button>
         <button
           onClick={handleSave}
-          className="border-brutal-thick shadow-brutal bg-success text-success-foreground press-brutal py-4 flex items-center justify-center gap-2 font-display uppercase"
+          className="border-brutal-thick bg-success text-success-foreground press-brutal py-4 flex items-center justify-center gap-2 font-display uppercase"
         >
           <Send className="size-5" strokeWidth={2.5} />
           Send
