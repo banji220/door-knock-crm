@@ -116,7 +116,7 @@ function TodayPage() {
         />
       }
     >
-      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+      <div className="space-y-5">
         <ActionSection label="Appointments Today" count={appointmentsToday.length}>
           {appointmentsToday.map((a) => (
             <li key={a.id}>
