@@ -94,53 +94,54 @@
 :root {
   --radius: 0px;
 
-  /* Locked OKLCH palette */
-  --background: oklch(0.97 0.005 80);       /* warm off-white paper */
-  --foreground: oklch(0.15 0.02 50);        /* near-black ink */
-  --card: oklch(0.95 0.01 75);              /* slightly warm card */
+  /* UI base — warm but with enough contrast to not look dead */
+  --background: oklch(0.96 0.01 75);        /* warm cream, slight yellow push */
+  --foreground: oklch(0.13 0.03 45);        /* rich near-black with warmth */
+  --card: oklch(0.93 0.02 72);              /* warm card — NOT the same as background */
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
 
-  --primary: oklch(0.55 0.12 45);           /* warm amber-brown */
-  --primary-foreground: oklch(0.98 0.005 80);
+  --primary: oklch(0.50 0.18 38);           /* SATURATED warm brown-amber — this must POP */
+  --primary-foreground: oklch(0.97 0.008 75);
 
-  --secondary: oklch(0.90 0.04 75);
+  --secondary: oklch(0.88 0.05 72);
   --secondary-foreground: var(--foreground);
 
-  --muted: oklch(0.92 0.015 75);
-  --muted-foreground: oklch(0.55 0.02 60);
+  --muted: oklch(0.90 0.02 72);
+  --muted-foreground: oklch(0.50 0.04 55);  /* readable muted, not invisible */
 
-  --accent: oklch(0.90 0.04 75);            /* soft warm accent */
+  --accent: oklch(0.85 0.08 70);            /* warm accent with actual color */
   --accent-foreground: var(--foreground);
 
-  --destructive: oklch(0.55 0.2 25);        /* warm red */
+  --destructive: oklch(0.50 0.25 28);       /* hot red — urgent, not dusty */
   --destructive-foreground: oklch(0.98 0.005 80);
 
   --success: oklch(0.5 0.13 150);
   --success-foreground: oklch(0.98 0.005 80);
 
-  --warning: oklch(0.78 0.16 80);
+  --warning: oklch(0.78 0.18 80);
   --warning-foreground: var(--foreground);
 
   /* Aliases used across the app */
   --cream: var(--background);
   --ink: var(--foreground);
-  --amber: oklch(0.72 0.16 65);             /* heatmap-3 — used as accent */
+  --amber: oklch(0.73 0.18 70);             /* heatmap-2 — used as accent */
   --amber-deep: var(--primary);
 
   /* Borders are ink. Inputs/ring are ink. */
-  --border: oklch(0.80 0.02 70);
+  --border: oklch(0.75 0.04 65);
   --input: var(--foreground);
   --ring: var(--foreground);
 
-  /* Heatmap (progress / gamification — only place gradients allowed) */
-  --heatmap-0: oklch(0.92 0.01 80);
-  --heatmap-1: oklch(0.88 0.06 80);
-  --heatmap-2: oklch(0.82 0.14 78);
-  --heatmap-3: oklch(0.72 0.16 65);
-  --heatmap-4: oklch(0.58 0.14 45);
-  --heatmap-5: oklch(0.42 0.12 35);
+  /* Heatmap gradient — VIBRANT. Autumn leaves, hot coals, espresso.
+     Each step is an obvious jump in saturation and darkness. */
+  --heatmap-0: oklch(0.90 0.02 75);   /* empty — light warm grey */
+  --heatmap-1: oklch(0.82 0.12 85);   /* low — real yellow, visible */
+  --heatmap-2: oklch(0.73 0.18 70);   /* medium — bright orange-amber */
+  --heatmap-3: oklch(0.62 0.20 55);   /* good — rich burnt orange */
+  --heatmap-4: oklch(0.48 0.18 35);   /* high — deep red-brown */
+  --heatmap-5: oklch(0.35 0.14 30);   /* max — near-black chocolate with red undertone */
 
   --chart-1: var(--heatmap-2);
   --chart-2: var(--heatmap-3);
