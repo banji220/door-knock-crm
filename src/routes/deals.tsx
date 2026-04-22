@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { Phone, Navigation, ChevronDown, ChevronUp } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui-brutal";
+import { HouseDetail, type DetailStatus } from "@/components/HouseDetail";
 import {
   mockLeads,
   mockQuotes,
@@ -54,6 +55,7 @@ const STRIPE_BG: Record<StripeTone, string> = {
 function DealsPage() {
   const navigate = useNavigate();
   const [wonOpen, setWonOpen] = useState(false);
+  const [selected, setSelected] = useState<DealCard | null>(null);
 
   const { hottest, pipeline, won, totals } = useMemo(() => {
     const quoteByAddr = new Map(mockQuotes.map((q) => [q.address, q]));
@@ -159,8 +161,8 @@ function DealsPage() {
     { label: "WON", value: totals.wonTotal, color: "var(--heatmap-5)" },
   ];
 
-  const openHouse = (address: string) =>
-    navigate({ to: "/quote", search: { address, mode: "quote" } });
+  // Tap a deal card → open the read-only detail sheet (NOT the capture form).
+  const openHouse = (card: DealCard) => setSelected(card);
 
   const callPhone = (e: React.MouseEvent, phone?: string) => {
     e.stopPropagation();
@@ -228,7 +230,7 @@ function DealsPage() {
                 <DealRow
                   key={c.id}
                   card={c}
-                  onOpen={() => openHouse(c.address)}
+                  onOpen={() => openHouse(c)}
                   onCall={(e) => callPhone(e, c.phone)}
                   onNav={(e) => navigateMaps(e, c.address)}
                 />
@@ -260,7 +262,7 @@ function DealsPage() {
                       ? `Quoted ${timeAgoLabel(c.daysSince)}`
                       : `Lead captured ${timeAgoLabel(c.daysSince)}`
                   }
-                  onOpen={() => openHouse(c.address)}
+                  onOpen={() => openHouse(c)}
                   onCall={(e) => callPhone(e, c.phone)}
                   onNav={(e) => navigateMaps(e, c.address)}
                 />
@@ -310,7 +312,7 @@ function DealsPage() {
                     key={c.id}
                     card={c}
                     subLabel={`Won ${timeAgoLabel(c.daysSince)}`}
-                    onOpen={() => openHouse(c.address)}
+                    onOpen={() => openHouse(c)}
                     onCall={(e) => callPhone(e, c.phone)}
                     onNav={(e) => navigateMaps(e, c.address)}
                   />
@@ -320,6 +322,21 @@ function DealsPage() {
           )}
         </section>
       </div>
+
+      {selected && (
+        <HouseDetail
+          address={selected.address}
+          initialName={selected.name}
+          initialPhone={selected.phone}
+          status={(selected.stage === "WON" ? "CUSTOMER" : selected.stage) as DetailStatus}
+          onClose={() => setSelected(null)}
+          onEditQuote={() => {
+            const s = selected;
+            setSelected(null);
+            navigate({ to: "/quote", search: { address: s.address, mode: "quote" } });
+          }}
+        />
+      )}
     </AppShell>
   );
 }

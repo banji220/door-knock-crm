@@ -4,6 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { Card, Input, SectionHeader } from "@/components/ui-brutal";
 import { mockCustomers, type Customer } from "@/lib/mock-data";
 import { Search, Phone, Star, Clock } from "lucide-react";
+import { HouseDetail } from "@/components/HouseDetail";
 
 export const Route = createFileRoute("/clients")({
   component: ClientsPage,
@@ -22,6 +23,7 @@ function daysAgo(iso: string) {
 function ClientsPage() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
+  const [selected, setSelected] = useState<Customer | null>(null);
 
   const totals = useMemo(() => {
     const ltv = mockCustomers.reduce((s, c) => s + c.ltv, 0);
@@ -56,8 +58,8 @@ function ClientsPage() {
     [q],
   );
 
-  const openCustomer = (c: Customer) =>
-    navigate({ to: "/quote", search: { address: c.address, mode: "quote" } });
+  // Tap a customer row → open the read-only detail sheet (NOT the capture form).
+  const openCustomer = (c: Customer) => setSelected(c);
 
   return (
     <AppShell title="Clients" subtitle={`${totals.count} customers`}>
@@ -151,6 +153,21 @@ function ClientsPage() {
           ))
         )}
       </ul>
+
+      {selected && (
+        <HouseDetail
+          address={selected.address}
+          initialName={selected.name}
+          initialPhone={selected.phone}
+          status="CUSTOMER"
+          onClose={() => setSelected(null)}
+          onEditQuote={() => {
+            const c = selected;
+            setSelected(null);
+            navigate({ to: "/quote", search: { address: c.address, mode: "quote" } });
+          }}
+        />
+      )}
     </AppShell>
   );
 }
