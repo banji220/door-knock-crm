@@ -36,7 +36,7 @@ export function ActionItem({
         </span>
         {price !== undefined && (
           <span className="font-mono font-bold text-lg leading-none">
-            £{price}
+            ${price}
           </span>
         )}
       </div>

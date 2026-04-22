@@ -177,7 +177,7 @@ function DealsPage() {
   };
 
   return (
-    <AppShell title="Deals" subtitle={`Pipeline £${totals.quotedTotal} · Won £${totals.wonTotal}`}>
+    <AppShell title="Deals" subtitle={`Pipeline $${totals.quotedTotal} · Won $${totals.wonTotal}`}>
       <div className="space-y-5">
         {/* Money Bar */}
         <section>
@@ -205,7 +205,7 @@ function DealsPage() {
                   style={{ background: s.color }}
                 />
                 <span className="uppercase tracking-wider">
-                  {s.label} £{s.value}
+                  {s.label} ${s.value}
                 </span>
               </div>
             ))}
@@ -288,7 +288,7 @@ function DealsPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="font-mono font-bold text-sm tabular-nums">
-                £{won.reduce((s, c) => s + c.price, 0)}
+                ${won.reduce((s, c) => s + c.price, 0)}
               </span>
               {wonOpen ? (
                 <ChevronUp className="w-4 h-4" strokeWidth={3} />
@@ -365,7 +365,7 @@ function Section({
           </span>
         </div>
         <span className="font-mono font-bold text-sm tabular-nums">
-          £{total}
+          ${total}
         </span>
       </div>
       {children}
@@ -412,7 +412,7 @@ function DealRow({
                     card.stage === "WON" ? "text-foreground" : ""
                   }`}
                 >
-                  £{card.price}
+                  ${card.price}
                 </span>
               )}
             </div>

@@ -72,7 +72,7 @@ function ClientsPage() {
           className="text-6xl font-mono font-bold leading-none tabular-nums"
           style={{ color: "var(--success)" }}
         >
-          £{totals.ltv.toLocaleString()}
+          ${totals.ltv.toLocaleString()}
         </div>
         <div className="mt-2 text-xs font-mono text-muted-foreground">
           across <span className="font-bold text-foreground">{totals.count}</span> customers
@@ -190,7 +190,7 @@ function CustomerRow({
               {c.name}
             </h3>
             <span className="font-mono font-bold text-base leading-none tabular-nums">
-              £{c.ltv}
+              ${c.ltv}
             </span>
           </div>
           <div className="text-xs font-mono text-muted-foreground mt-1 truncate">

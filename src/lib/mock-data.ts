@@ -62,17 +62,17 @@ const addHours = (n: number) => {
 };
 
 export const mockKnocks: Knock[] = [
-  { id: "k1", address: "12 Oak Street", outcome: "booked", timestamp: iso(addHours(-1)), notes: "Wants monthly clean, £35" },
+  { id: "k1", address: "12 Oak Street", outcome: "booked", timestamp: iso(addHours(-1)), notes: "Wants monthly clean, $35" },
   { id: "k2", address: "14 Oak Street", outcome: "no-answer", timestamp: iso(addHours(-1)) },
   { id: "k3", address: "16 Oak Street", outcome: "not-interested", timestamp: iso(addHours(-2)) },
-  { id: "k4", address: "18 Oak Street", outcome: "quoted", timestamp: iso(addHours(-2)), notes: "£40 quoted, will think" },
+  { id: "k4", address: "18 Oak Street", outcome: "quoted", timestamp: iso(addHours(-2)), notes: "$40 quoted, will think" },
   { id: "k5", address: "20 Oak Street", outcome: "callback", timestamp: iso(addHours(-3)), notes: "Husband decides, evening" },
   { id: "k6", address: "22 Oak Street", outcome: "no-answer", timestamp: iso(addHours(-3)) },
 ];
 
 export const mockLeads: Lead[] = [
   { id: "l1", name: "Sarah Mendez", address: "12 Oak Street", phone: "07700 900123", status: "won", lastContact: iso(addHours(-1)) },
-  { id: "l2", name: "No 18 Oak", address: "18 Oak Street", phone: "07700 900222", status: "warm", lastContact: iso(addHours(-2)), notes: "£40 quoted" },
+  { id: "l2", name: "No 18 Oak", address: "18 Oak Street", phone: "07700 900222", status: "warm", lastContact: iso(addHours(-2)), notes: "$40 quoted" },
   { id: "l3", name: "Mr Patel", address: "20 Oak Street", phone: "07700 900456", status: "hot", lastContact: iso(addHours(-3)), notes: "Callback after 6pm" },
   { id: "l4", name: "Jenny Carter", address: "47 Birch Lane", phone: "07700 900789", status: "warm", lastContact: iso(addDays(-2)) },
   { id: "l5", name: "No 33 Elm", address: "33 Elm Road", status: "cold", lastContact: iso(addDays(-5)) },
@@ -120,7 +120,7 @@ export type Customer = {
   name: string;
   address: string;
   phone?: string;
-  ltv: number;             // lifetime value £
+  ltv: number;             // lifetime value $
   jobsDone: number;
   lastJobAt: string;       // ISO
   recleanDueAt: string;    // ISO — when next clean is due

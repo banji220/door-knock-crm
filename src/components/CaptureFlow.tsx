@@ -383,11 +383,11 @@ function CardWhat({
             Price
           </div>
           <div className="text-xs font-mono line-through text-foreground/60">
-            Normally £{normal}
+            Normally ${normal}
           </div>
         </div>
         <div className="text-5xl font-mono font-bold text-primary leading-none">
-          £{display}
+          ${display}
         </div>
         <button
           onClick={() => {
@@ -395,7 +395,7 @@ function CardWhat({
               update("priceOverridden", false);
               update("price", auto);
             } else {
-              const v = window.prompt("Enter price (£)", String(display));
+              const v = window.prompt("Enter price ($)", String(display));
               const n = v ? Number(v.replace(/[^\d.]/g, "")) : NaN;
               if (!isNaN(n) && n >= 0 && n < 100000) {
                 update("priceOverridden", true);

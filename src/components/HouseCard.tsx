@@ -110,7 +110,7 @@ export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
                 {moneyLabel}
               </div>
               <div className="text-3xl font-mono font-bold leading-none">
-                £{money}
+                ${money}
               </div>
             </div>
           )}
@@ -187,7 +187,7 @@ export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
                       <div className="font-mono font-bold text-xs uppercase">
                         {t.type === "knock"
                           ? OUTCOME_META[t.outcome].full
-                          : `Job · ${t.status} · £${t.price}`}
+                          : `Job · ${t.status} · $${t.price}`}
                       </div>
                       {t.type === "knock" && t.notes && (
                         <div className="text-xs font-mono text-muted-foreground truncate">
