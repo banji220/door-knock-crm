@@ -4,6 +4,7 @@ import { Phone, Navigation, ChevronDown, ChevronUp } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui-brutal";
 import { HouseDetail, type DetailStatus } from "@/components/HouseDetail";
+import { formatMoney } from "@/lib/format";
 import {
   mockLeads,
   mockQuotes,
@@ -177,7 +178,7 @@ function DealsPage() {
   };
 
   return (
-    <AppShell title="Deals" subtitle={`Pipeline £${totals.quotedTotal} · Won £${totals.wonTotal}`}>
+    <AppShell title="Deals" subtitle={`Pipeline ${formatMoney(totals.quotedTotal)} · Won ${formatMoney(totals.wonTotal)}`}>
       <div className="space-y-5">
         {/* Money Bar */}
         <section>
@@ -205,7 +206,7 @@ function DealsPage() {
                   style={{ background: s.color }}
                 />
                 <span className="uppercase tracking-wider">
-                  {s.label} £{s.value}
+                  {s.label} {formatMoney(s.value)}
                 </span>
               </div>
             ))}
@@ -288,7 +289,7 @@ function DealsPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="font-mono font-bold text-sm tabular-nums">
-                £{won.reduce((s, c) => s + c.price, 0)}
+                {formatMoney(won.reduce((s, c) => s + c.price, 0))}
               </span>
               {wonOpen ? (
                 <ChevronUp className="w-4 h-4" strokeWidth={3} />
@@ -365,7 +366,7 @@ function Section({
           </span>
         </div>
         <span className="font-mono font-bold text-sm tabular-nums">
-          £{total}
+          {formatMoney(total)}
         </span>
       </div>
       {children}
@@ -412,7 +413,7 @@ function DealRow({
                     card.stage === "WON" ? "text-foreground" : ""
                   }`}
                 >
-                  £{card.price}
+                  {formatMoney(card.price)}
                 </span>
               )}
             </div>

@@ -17,6 +17,7 @@ import {
   type KnockOutcome,
 } from "@/lib/mock-data";
 import { OUTCOME_META } from "@/lib/map-data";
+import { formatMoney } from "@/lib/format";
 
 /* ============================================================
    HouseDetail — READ-ONLY detail bottom sheet for an existing
@@ -197,7 +198,7 @@ export function HouseDetail({
                       Lifetime Value
                     </div>
                     <div className="mt-1 text-4xl font-mono font-bold leading-none tabular-nums">
-                      £{customer.ltv.toLocaleString()}
+                      {formatMoney(customer.ltv)}
                     </div>
                   </div>
                   <div className="text-right">
@@ -213,11 +214,11 @@ export function HouseDetail({
                 <div>
                   {anchorPrice !== undefined && (
                     <div className="text-sm font-mono text-foreground/60 line-through tabular-nums">
-                      £{anchorPrice}
+                      {formatMoney(anchorPrice)}
                     </div>
                   )}
                   <div className="mt-0.5 text-4xl font-mono font-bold leading-none tabular-nums">
-                    £{quote.price}
+                    {formatMoney(quote.price)}
                   </div>
                   <div className="mt-2 text-[10px] font-mono font-bold uppercase tracking-[0.2em]">
                     {quote.frequency.replace("-", " ")}
@@ -380,7 +381,7 @@ export function HouseDetail({
                           Job · {t.status}
                         </span>
                         <span className="ml-2 font-mono font-bold text-xs tabular-nums">
-                          £{t.price}
+                          {formatMoney(t.price)}
                         </span>
                       </div>
                     )}

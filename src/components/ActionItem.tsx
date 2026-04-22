@@ -1,5 +1,6 @@
 import { Phone, Navigation } from "lucide-react";
 import { Card } from "./ui-brutal";
+import { formatMoney } from "@/lib/format";
 
 export type ActionItemProps = {
   /** "2:45 PM", "2d overdue", "5d old" — the time/age context */
@@ -36,7 +37,7 @@ export function ActionItem({
         </span>
         {price !== undefined && (
           <span className="font-mono font-bold text-lg leading-none">
-            £{price}
+            {formatMoney(price)}
           </span>
         )}
       </div>

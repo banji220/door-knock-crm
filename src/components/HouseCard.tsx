@@ -3,6 +3,7 @@ import { Card, Badge, Button } from "@/components/ui-brutal";
 import { Phone, MessageSquare, Navigation, X } from "lucide-react";
 import { mockKnocks, mockJobs, type KnockOutcome } from "@/lib/mock-data";
 import { OUTCOME_META, type HousePin } from "@/lib/map-data";
+import { formatMoney } from "@/lib/format";
 
 const OUTCOMES: KnockOutcome[] = [
   "booked", "quoted", "callback", "no-answer", "not-interested",
@@ -110,7 +111,7 @@ export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
                 {moneyLabel}
               </div>
               <div className="text-3xl font-mono font-bold leading-none">
-                £{money}
+                {formatMoney(money)}
               </div>
             </div>
           )}
@@ -187,7 +188,7 @@ export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
                       <div className="font-mono font-bold text-xs uppercase">
                         {t.type === "knock"
                           ? OUTCOME_META[t.outcome].full
-                          : `Job · ${t.status} · £${t.price}`}
+                          : `Job · ${t.status} · ${formatMoney(t.price)}`}
                       </div>
                       {t.type === "knock" && t.notes && (
                         <div className="text-xs font-mono text-muted-foreground truncate">
