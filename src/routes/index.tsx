@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, PageHeader } from "@/components/AppShell";
 import { Card, Button, Label, SectionHeader, Input, Badge } from "@/components/ui-brutal";
 import {
   mockKnocks, mockFollowUps, mockJobs, todayStats, type KnockOutcome,
 } from "@/lib/mock-data";
-import { Check, X, Phone, FileText, HelpCircle, Plus, Zap, MapPin } from "lucide-react";
+import { Check, X, Phone, FileText, HelpCircle, Plus, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: TodayPage,
@@ -59,19 +59,36 @@ function TodayPage() {
     return d.getTime() <= t.getTime();
   });
 
+  const fullDate = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const pendingActions = overdueChase.length + todayJobs.filter((j) => j.status === "scheduled").length;
+
   return (
     <AppShell
-      title="Today"
-      subtitle={`${streetMode} · ${new Date().toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })}`}
-      right={
-        <div className="text-right">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-foreground/70">
-            Knocks
-          </div>
-          <div className="text-3xl font-mono font-bold leading-none mt-0.5">
-            {knocks.length}
-          </div>
-        </div>
+      header={
+        <PageHeader
+          eyebrow="Today"
+          title={fullDate}
+          meta={
+            <>
+              <span className="font-bold text-foreground">{knocks.length}</span> doors knocked ·{" "}
+              <span className="font-bold text-foreground">{pendingActions}</span> actions pending
+            </>
+          }
+          action={
+            <div className="text-right border-2 border-foreground bg-[var(--amber)] px-3 py-1.5">
+              <div className="text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-foreground/70 leading-none">
+                Booked
+              </div>
+              <div className="text-2xl font-mono font-bold leading-none mt-1">
+                {todayStats.booked}
+              </div>
+            </div>
+          }
+        />
       }
     >
       {/* Stats — 3 cards */}
