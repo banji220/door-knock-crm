@@ -149,9 +149,9 @@ export function ContributionHeatmap() {
     return { grid, cols, total, monthLabels: labels };
   }, [allDays, range, metric]);
 
-  const CELL = isMobile ? 14 : 18;
   const GAP = isMobile ? 3 : 4;
   const dayColWidth = isMobile ? 24 : 28;
+  const LEGEND_CELL = isMobile ? 14 : 18;
 
   const totalLabel = `${metric} ${metric === "wins" ? "won" : "logged"} · last ${
     range === "90d" ? "90 days" : "year"
@@ -235,150 +235,144 @@ export function ContributionHeatmap() {
         </div>
       </div>
 
-      {/* Grid (horizontally scrollable) */}
-      <div className="overflow-x-auto -mx-4 px-4">
-        <div
-          className="inline-block"
-          style={{ minWidth: `${dayColWidth + cols * CELL + (cols - 1) * GAP}px` }}
-        >
-          {/* Month labels */}
-          <div className="flex mb-1" style={{ paddingLeft: `${dayColWidth}px` }}>
-            <div
-              className="grid"
-              style={{
-                gridTemplateColumns: `repeat(${cols}, ${CELL}px)`,
-                columnGap: `${GAP}px`,
-              }}
-            >
-              {Array.from({ length: cols }).map((_, col) => {
-                const label = monthLabels.find((m) => m.col === col)?.label;
-                return (
-                  <div
-                    key={col}
-                    className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground h-3 leading-none"
-                  >
-                    {label ?? ""}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex">
-            {/* Day labels (Mon/Wed/Fri) */}
-            <div
-              className="grid mr-1.5"
-              style={{
-                width: `${dayColWidth - 6}px`,
-                gridTemplateRows: `repeat(7, ${CELL}px)`,
-                rowGap: `${GAP}px`,
-              }}
-            >
-              {["", "Mon", "", "Wed", "", "Fri", ""].map((label, r) => (
-                <div
-                  key={r}
-                  className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground leading-none flex items-center"
-                >
-                  {label}
-                </div>
-              ))}
-            </div>
-
-            {/* Cells */}
-            <div
-              className="grid"
-              style={{
-                gridTemplateColumns: `repeat(${cols}, ${CELL}px)`,
-                gridTemplateRows: `repeat(7, ${CELL}px)`,
-                gridAutoFlow: "column",
-                columnGap: `${GAP}px`,
-                rowGap: `${GAP}px`,
-              }}
-            >
-              {grid.flatMap((week) =>
-                week.map((cell) => {
-                  const value = metricValue(cell, metric);
-                  const s = colorStep(value, metric);
-                  const inStreak = cell.streakLen >= 3 && !cell.inFuture;
-                  const key = cell.date.toISOString();
-                  const isSelected = selectedDate === key;
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      disabled={cell.inFuture}
-                      onMouseEnter={(e) => {
-                        if (cell.inFuture) return;
-                        setHoverCell(cell);
-                        const rect = (
-                          e.currentTarget.closest("section") as HTMLElement
-                        ).getBoundingClientRect();
-                        const cellRect = e.currentTarget.getBoundingClientRect();
-                        setHoverPos({
-                          x: cellRect.left - rect.left + CELL / 2,
-                          y: cellRect.top - rect.top,
-                        });
-                      }}
-                      onMouseLeave={() => {
-                        setHoverCell(null);
-                        setHoverPos(null);
-                      }}
-                      onClick={() => {
-                        if (cell.inFuture) return;
-                        setSelectedDate((d) => (d === key ? null : key));
-                      }}
-                      className={
-                        cell.inFuture
-                          ? "bg-transparent border border-foreground/10 cursor-default"
-                          : `heatmap-${s} border border-foreground/25 cursor-pointer`
-                      }
-                      style={
-                        isSelected
-                          ? {
-                              outline: "2px solid var(--foreground)",
-                              outlineOffset: "0px",
-                              zIndex: 1,
-                              position: "relative",
-                            }
-                          : inStreak
-                            ? {
-                                outline: "2px solid var(--foreground)",
-                                outlineOffset: "-2px",
-                              }
-                            : undefined
-                      }
-                      aria-label={
-                        cell.inFuture
-                          ? formatDate(cell.date)
-                          : `${formatDate(cell.date)} — ${value} ${metric}`
-                      }
-                    />
-                  );
-                }),
-              )}
-            </div>
-          </div>
-
-          {/* Legend */}
+      {/* Grid (full-width, responsive cells) */}
+      <div className="w-full">
+        {/* Month labels */}
+        <div className="flex mb-1" style={{ paddingLeft: `${dayColWidth}px` }}>
           <div
-            className="flex items-center justify-end gap-1.5 mt-3"
-            style={{ paddingLeft: `${dayColWidth}px` }}
+            className="grid flex-1 min-w-0"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              columnGap: `${GAP}px`,
+            }}
           >
-            <span className="text-[11px] font-mono text-muted-foreground mr-1">
-              Less
-            </span>
-            {[0, 1, 2, 3, 4, 5].map((n) => (
-              <span
-                key={n}
-                className={`heatmap-${n} border border-foreground/25`}
-                style={{ width: `${CELL}px`, height: `${CELL}px` }}
-                aria-hidden
-              />
-            ))}
-            <span className="text-[11px] font-mono text-muted-foreground ml-1">
-              More
-            </span>
+            {Array.from({ length: cols }).map((_, col) => {
+              const label = monthLabels.find((m) => m.col === col)?.label;
+              return (
+                <div
+                  key={col}
+                  className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground h-3 leading-none"
+                >
+                  {label ?? ""}
+                </div>
+              );
+            })}
           </div>
+        </div>
+
+        <div className="flex w-full">
+          {/* Day labels (Mon/Wed/Fri) */}
+          <div
+            className="grid mr-1.5 shrink-0"
+            style={{
+              width: `${dayColWidth - 6}px`,
+              gridTemplateRows: `repeat(7, minmax(0, 1fr))`,
+              rowGap: `${GAP}px`,
+            }}
+          >
+            {["", "Mon", "", "Wed", "", "Fri", ""].map((label, r) => (
+              <div
+                key={r}
+                className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground leading-none flex items-center"
+              >
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {/* Cells */}
+          <div
+            className="grid flex-1 min-w-0"
+            style={{
+              gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+              gridTemplateRows: `repeat(7, auto)`,
+              gridAutoFlow: "column",
+              columnGap: `${GAP}px`,
+              rowGap: `${GAP}px`,
+            }}
+          >
+            {grid.flatMap((week) =>
+              week.map((cell) => {
+                const value = metricValue(cell, metric);
+                const s = colorStep(value, metric);
+                const inStreak = cell.streakLen >= 3 && !cell.inFuture;
+                const key = cell.date.toISOString();
+                const isSelected = selectedDate === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={cell.inFuture}
+                    onMouseEnter={(e) => {
+                      if (cell.inFuture) return;
+                      setHoverCell(cell);
+                      const rect = (
+                        e.currentTarget.closest("section") as HTMLElement
+                      ).getBoundingClientRect();
+                      const cellRect = e.currentTarget.getBoundingClientRect();
+                      setHoverPos({
+                        x: cellRect.left - rect.left + cellRect.width / 2,
+                        y: cellRect.top - rect.top,
+                      });
+                    }}
+                    onMouseLeave={() => {
+                      setHoverCell(null);
+                      setHoverPos(null);
+                    }}
+                    onClick={() => {
+                      if (cell.inFuture) return;
+                      setSelectedDate((d) => (d === key ? null : key));
+                    }}
+                    style={
+                      isSelected
+                        ? {
+                            aspectRatio: "1 / 1",
+                            outline: "2px solid var(--foreground)",
+                            outlineOffset: "0px",
+                            zIndex: 1,
+                            position: "relative",
+                          }
+                        : inStreak
+                          ? {
+                              aspectRatio: "1 / 1",
+                              outline: "2px solid var(--foreground)",
+                              outlineOffset: "-2px",
+                            }
+                          : { aspectRatio: "1 / 1" }
+                    }
+                    className={
+                      cell.inFuture
+                        ? "w-full bg-transparent border border-foreground/10 cursor-default"
+                        : `w-full heatmap-${s} border border-foreground/25 cursor-pointer`
+                    }
+                    aria-label={
+                      cell.inFuture
+                        ? formatDate(cell.date)
+                        : `${formatDate(cell.date)} — ${value} ${metric}`
+                    }
+                  />
+                );
+              }),
+            )}
+          </div>
+        </div>
+
+        {/* Legend */}
+        <div className="flex items-center justify-end gap-1.5 mt-3">
+          <span className="text-[11px] font-mono text-muted-foreground mr-1">
+            Less
+          </span>
+          {[0, 1, 2, 3, 4, 5].map((n) => (
+            <span
+              key={n}
+              className={`heatmap-${n} border border-foreground/25`}
+              style={{ width: `${LEGEND_CELL}px`, height: `${LEGEND_CELL}px` }}
+              aria-hidden
+            />
+          ))}
+          <span className="text-[11px] font-mono text-muted-foreground ml-1">
+            More
+          </span>
         </div>
       </div>
 
