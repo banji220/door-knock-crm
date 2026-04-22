@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { formatNumber } from "@/lib/format";
 import {
   buildYearOfActivity,
@@ -13,13 +14,14 @@ import {
 
 /* =========================================================================
    ContributionHeatmap
-   - Mobile (<768): 90 days, 14×14 cells, gap 3
-   - Desktop:       1y by default, 18×18 cells, gap 4 (toggleable to 90d)
+   - Mobile  (<640):    90 days,  14×14 cells, gap 3
+   - Tablet  (640-1023): 180 days, ~16×16 cells, gap 3 — wide intermediate
+   - Desktop (>=1024):  1y default, 18×18 cells, gap 4 (toggleable)
    - 3+ day streak cells get a 2px ink ring
-   - Hover tooltip on desktop, tap-to-expand detail on mobile
+   - Hover tooltip on desktop, tap-to-expand detail on touch sizes
    ========================================================================= */
 
-type Range = "90d" | "1y";
+type Range = "90d" | "180d" | "1y";
 
 const METRICS: { key: Metric; label: string }[] = [
   { key: "doors", label: "Doors" },
@@ -30,6 +32,7 @@ const METRICS: { key: Metric; label: string }[] = [
 
 const RANGES: { key: Range; label: string; days: number }[] = [
   { key: "90d", label: "90d", days: 90 },
+  { key: "180d", label: "180d", days: 180 },
   { key: "1y", label: "1y", days: 365 },
 ];
 
