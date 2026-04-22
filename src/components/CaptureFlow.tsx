@@ -1,5 +1,6 @@
 import { useState, useRef, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Check, MapPin, X } from "lucide-react";
+import { formatMoney } from "@/lib/format";
 
 export type CaptureMode = "quote" | "follow-up";
 
@@ -383,11 +384,11 @@ function CardWhat({
             Price
           </div>
           <div className="text-xs font-mono line-through text-foreground/60">
-            Normally ${normal}
+            Normally {formatMoney(normal)}
           </div>
         </div>
         <div className="text-5xl font-mono font-bold text-primary leading-none">
-          ${display}
+          {formatMoney(display)}
         </div>
         <button
           onClick={() => {
