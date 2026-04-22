@@ -1,217 +1,251 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
-import { AppShell } from "@/components/AppShell";
-import { Card, Badge, Input, SectionHeader, Button } from "@/components/ui-brutal";
-import { mockKnocks, type KnockOutcome } from "@/lib/mock-data";
-import { Locate, Plus, Layers } from "lucide-react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect, useRef, useCallback } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import { BottomNav } from "@/components/BottomNav";
+import { HouseCard } from "@/components/HouseCard";
+import { Search, Crosshair, Plus } from "lucide-react";
+import {
+  housePins, OUTCOME_META, STREET_CENTER, MAPBOX_TOKEN, type HousePin,
+} from "@/lib/map-data";
+import type { KnockOutcome } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/map")({
   component: MapPage,
 });
 
-/* House on the street grid */
-type House = {
-  number: number;
-  side: "left" | "right";
-  outcome?: KnockOutcome | "untouched";
-};
-
-const heatFor = (o: House["outcome"]): string => {
-  switch (o) {
-    case "booked": return "heatmap-5 text-background";
-    case "quoted": return "heatmap-4 text-background";
-    case "callback": return "heatmap-3";
-    case "no-answer": return "heatmap-1";
-    case "not-interested": return "bg-card";
-    default: return "heatmap-0";
-  }
-};
-
-const labelFor = (o: House["outcome"]): string => {
-  switch (o) {
-    case "booked": return "B";
-    case "quoted": return "Q";
-    case "callback": return "C";
-    case "no-answer": return "·";
-    case "not-interested": return "✕";
-    default: return "";
-  }
-};
-
 function MapPage() {
-  const [street, setStreet] = useState("Oak Street");
-  const [start] = useState(2);
-  const [count] = useState(28);
-  const [selected, setSelected] = useState<House | null>(null);
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const userMarkerRef = useRef<mapboxgl.Marker | null>(null);
 
-  // Build the street as a 2-column grid, evens left, odds right
-  const houses: House[] = useMemo(() => {
-    const knockMap = new Map<string, KnockOutcome>();
-    mockKnocks.forEach((k) => {
-      const m = k.address.match(/^(\d+)/);
-      if (m) knockMap.set(m[1], k.outcome);
+  const [pins, setPins] = useState<HousePin[]>(housePins);
+  const [selected, setSelected] = useState<HousePin | null>(null);
+  const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<
+    Array<{ id: string; place_name: string; center: [number, number] }>
+  >([]);
+  const navigate = useNavigate();
+
+  /* Init map once */
+  useEffect(() => {
+    if (!mapContainer.current || mapRef.current) return;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    const map = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: "mapbox://styles/mapbox/streets-v12",
+      center: STREET_CENTER,
+      zoom: 17,
+      pitch: 0,
+      attributionControl: false,
     });
-    const arr: House[] = [];
-    for (let i = 0; i < count; i++) {
-      const number = start + i;
-      const side = number % 2 === 0 ? "left" : "right";
-      arr.push({
-        number,
-        side,
-        outcome: knockMap.get(String(number)) ?? "untouched",
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }), "top-right");
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  /* Render pins whenever data changes */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const draw = () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+      pins.forEach((p) => {
+        const meta = OUTCOME_META[p.outcome];
+        const el = document.createElement("button");
+        el.className =
+          "press-brutal cursor-pointer border-2 border-foreground font-mono font-bold flex items-center justify-center";
+        el.style.width = "32px";
+        el.style.height = "32px";
+        el.style.borderRadius = "0";
+        el.style.background = meta.color;
+        el.style.fontSize = "12px";
+        el.style.color = ["booked", "quoted"].includes(p.outcome)
+          ? "var(--background)"
+          : "var(--foreground)";
+        el.textContent = meta.label;
+        el.setAttribute("aria-label", `${p.address} — ${meta.full}`);
+        el.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setSelected(p);
+        });
+        const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
+          .setLngLat([p.lng, p.lat])
+          .addTo(map);
+        markersRef.current.push(marker);
       });
+    };
+
+    if (map.loaded()) draw();
+    else map.once("load", draw);
+  }, [pins]);
+
+  /* GPS tracking */
+  const recenterGPS = useCallback(() => {
+    if (!navigator.geolocation || !mapRef.current) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const map = mapRef.current!;
+        const ll: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+        map.flyTo({ center: ll, zoom: 18, duration: 800 });
+
+        if (userMarkerRef.current) userMarkerRef.current.remove();
+        const el = document.createElement("div");
+        el.style.cssText = `
+          width:18px;height:18px;border-radius:50%;
+          background:var(--primary);border:2px solid var(--foreground);
+          box-shadow:0 0 0 6px color-mix(in oklab, var(--primary) 25%, transparent);
+        `;
+        if (pos.coords.heading != null && !isNaN(pos.coords.heading)) {
+          const arrow = document.createElement("div");
+          arrow.style.cssText = `
+            position:absolute;top:-12px;left:50%;
+            width:0;height:0;border-left:6px solid transparent;
+            border-right:6px solid transparent;border-bottom:10px solid var(--primary);
+            transform:translateX(-50%) rotate(${pos.coords.heading}deg);
+            transform-origin:50% 18px;
+          `;
+          el.style.position = "relative";
+          el.appendChild(arrow);
+        }
+        userMarkerRef.current = new mapboxgl.Marker({ element: el })
+          .setLngLat(ll).addTo(mapRef.current!);
+      },
+      () => {},
+      { enableHighAccuracy: true, timeout: 5000 },
+    );
+  }, []);
+
+  /* Geocoder search via Mapbox API */
+  useEffect(() => {
+    if (!search.trim() || search.length < 3) {
+      setSearchResults([]);
+      return;
     }
-    return arr;
-  }, [start, count]);
-
-  const left = houses.filter((h) => h.side === "left");
-  const right = houses.filter((h) => h.side === "right");
-
-  const stats = useMemo(() => {
-    let knocked = 0, booked = 0, quoted = 0;
-    houses.forEach((h) => {
-      if (h.outcome && h.outcome !== "untouched") knocked++;
-      if (h.outcome === "booked") booked++;
-      if (h.outcome === "quoted") quoted++;
-    });
-    return { knocked, booked, quoted, total: houses.length };
-  }, [houses]);
-
-  return (
-    <AppShell
-      title="Map"
-      subtitle={`${street} · ${stats.knocked}/${stats.total} knocked`}
-      right={
-        <button className="press-brutal size-10 border-2 border-foreground bg-card flex items-center justify-center">
-          <Layers className="size-5" strokeWidth={2.5} />
-        </button>
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
+          search,
+        )}.json?access_token=${MAPBOX_TOKEN}&limit=5&proximity=${STREET_CENTER[0]},${STREET_CENTER[1]}`;
+        const res = await fetch(url, { signal: ctrl.signal });
+        const data = await res.json();
+        setSearchResults(
+          (data.features ?? []).map((f: { id: string; place_name: string; center: [number, number] }) => ({
+            id: f.id,
+            place_name: f.place_name,
+            center: f.center,
+          })),
+        );
+      } catch {
+        /* ignore */
       }
-    >
-      {/* Street selector */}
-      <div className="mb-3 flex gap-2">
-        <Input
-          value={street}
-          onChange={(e) => setStreet(e.target.value)}
-          className="flex-1 text-base"
-        />
-        <button className="press-brutal size-[52px] border-2 border-foreground bg-foreground text-background flex items-center justify-center shrink-0">
-          <Locate className="size-5" strokeWidth={2.5} />
-        </button>
-      </div>
+    }, 250);
+    return () => {
+      ctrl.abort();
+      clearTimeout(t);
+    };
+  }, [search]);
 
-      {/* Top stats */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <Card className="p-2.5">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-muted-foreground">Knocked</div>
-          <div className="text-2xl font-mono font-bold mt-0.5 leading-none">{stats.knocked}</div>
-        </Card>
-        <Card className="p-2.5">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-muted-foreground">Quoted</div>
-          <div className="text-2xl font-mono font-bold mt-0.5 leading-none">{stats.quoted}</div>
-        </Card>
-        <Card className="p-2.5 bg-foreground text-background">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] opacity-70">Booked</div>
-          <div className="text-2xl font-mono font-bold mt-0.5 leading-none">{stats.booked}</div>
-        </Card>
-      </div>
+  const handleSelectResult = (center: [number, number], name: string) => {
+    mapRef.current?.flyTo({ center, zoom: 17, duration: 700 });
+    setSearch(name);
+    setSearchResults([]);
+    setSearchOpen(false);
+  };
 
-      {/* Street grid: two columns of houses with road in middle */}
-      <div className="border-2 border-foreground bg-card p-3 mb-4 relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-3 px-2 bg-card border-2 border-foreground">
-          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">{street} ↑</span>
-        </div>
-        <div className="grid grid-cols-[1fr_24px_1fr] gap-1.5 pt-2">
-          {/* left col (evens) */}
-          <div className="space-y-1.5">
-            {left.map((h) => (
-              <HouseCell key={h.number} house={h} onClick={() => setSelected(h)} />
-            ))}
-          </div>
-          {/* road */}
-          <div
-            className="border-x-2 border-foreground bg-[repeating-linear-gradient(0deg,transparent_0_8px,var(--foreground)_8px_14px)]"
-            aria-hidden
-          />
-          {/* right col (odds) */}
-          <div className="space-y-1.5">
-            {right.map((h) => (
-              <HouseCell key={h.number} house={h} onClick={() => setSelected(h)} />
-            ))}
-          </div>
-        </div>
-      </div>
+  const handleKnockHere = () => {
+    if (!mapRef.current) return;
+    const center = mapRef.current.getCenter();
+    const newPin: HousePin = {
+      id: `pin-${Date.now()}`,
+      address: `New pin · ${center.lng.toFixed(4)}, ${center.lat.toFixed(4)}`,
+      lng: center.lng,
+      lat: center.lat,
+      outcome: "untouched",
+    };
+    setPins((p) => [...p, newPin]);
+    setSelected(newPin);
+  };
 
-      {/* Heatmap legend */}
-      <SectionHeader>Density</SectionHeader>
-      <div className="border-2 border-foreground bg-card p-3 mb-4">
-        <div className="heatmap-bar h-3 border-2 border-foreground" />
-        <div className="flex justify-between mt-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-muted-foreground">
-          <span>None</span>
-          <span>Low</span>
-          <span>Quoted</span>
-          <span>Booked</span>
-          <span>Hot</span>
-        </div>
-      </div>
+  const handleLogOutcome = (outcome: KnockOutcome) => {
+    if (!selected) return;
+    setPins((p) =>
+      p.map((x) => (x.id === selected.id ? { ...x, outcome } : x)),
+    );
+    setSelected((s) => (s ? { ...s, outcome } : s));
+  };
 
-      {/* Selected house — bottom panel */}
-      {selected && (
-        <Card className="p-4 mb-4 bg-[var(--amber)]/30">
-          <div className="flex items-baseline justify-between gap-2 mb-2">
-            <h3 className="font-mono font-bold uppercase text-base">
-              {selected.number} {street}
-            </h3>
-            <Badge
-              variant={
-                selected.outcome === "booked" ? "success"
-                  : selected.outcome === "quoted" ? "accent"
-                    : selected.outcome === "not-interested" ? "destructive"
-                      : "default"
-              }
-            >
-              {selected.outcome === "untouched" ? "New" : selected.outcome}
-            </Badge>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Link
-              to="/quote"
-              className="press-brutal border-2 border-foreground bg-foreground text-background py-3 text-center font-mono font-bold uppercase tracking-wider text-xs"
-            >
-              <Plus className="inline size-4 mr-1 -mt-0.5" strokeWidth={3} />
-              Quote
-            </Link>
-            <Link
-              to="/"
-              className="press-brutal border-2 border-foreground bg-card py-3 text-center font-mono font-bold uppercase tracking-wider text-xs"
-            >
-              Log Knock
-            </Link>
-          </div>
-        </Card>
-      )}
-
-      <Button variant="primary" block className="py-4">
-        <Plus className="size-5" strokeWidth={3} />
-        Add Street
-      </Button>
-    </AppShell>
-  );
-}
-
-function HouseCell({ house, onClick }: { house: House; onClick: () => void }) {
-  const heat = heatFor(house.outcome);
-  const isStrong = house.outcome === "booked" || house.outcome === "quoted";
   return (
-    <button
-      onClick={onClick}
-      className={`press-brutal w-full border-2 border-foreground py-2 px-1 flex items-center justify-between font-mono font-bold ${heat}`}
-    >
-      <span className="text-sm leading-none">{house.number}</span>
-      {labelFor(house.outcome) && (
-        <span className={`text-xs leading-none ${isStrong ? "" : "text-foreground/70"}`}>
-          {labelFor(house.outcome)}
-        </span>
+    <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Map surface */}
+      <div ref={mapContainer} className="absolute inset-0 bottom-20" />
+
+      {/* Search bar */}
+      <div className="absolute top-3 left-3 right-3 z-20 max-w-[480px] mx-auto">
+        <div className="border-2 border-foreground bg-card flex items-center">
+          <Search className="size-4 ml-3 shrink-0" strokeWidth={2.5} />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setSearchOpen(true); }}
+            onFocus={() => setSearchOpen(true)}
+            placeholder="Search address or street…"
+            className="flex-1 bg-transparent px-2 py-3 font-mono text-sm focus:outline-none"
+          />
+        </div>
+        {searchOpen && searchResults.length > 0 && (
+          <div className="mt-1 border-2 border-foreground bg-card max-h-60 overflow-y-auto">
+            {searchResults.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => handleSelectResult(r.center, r.place_name)}
+                className="w-full text-left px-3 py-2 font-mono text-xs border-b-2 border-foreground/10 last:border-0 hover:bg-[var(--accent)]"
+              >
+                {r.place_name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* GPS recenter — top right under search */}
+      <button
+        onClick={recenterGPS}
+        className="press-brutal absolute top-20 right-3 z-20 size-11 border-2 border-foreground bg-card flex items-center justify-center"
+        aria-label="Recenter to my location"
+      >
+        <Crosshair className="size-5" strokeWidth={2.5} />
+      </button>
+
+      {/* Knock Here FAB */}
+      <button
+        onClick={handleKnockHere}
+        className="press-brutal absolute bottom-24 right-3 z-20 border-2 border-foreground bg-foreground text-background font-mono font-bold uppercase tracking-wider px-5 py-4 flex items-center gap-2 text-sm"
+      >
+        <Plus className="size-5" strokeWidth={3} />
+        Knock Here
+      </button>
+
+      {/* House sheet */}
+      {selected && (
+        <HouseCard
+          pin={selected}
+          onClose={() => setSelected(null)}
+          onLogOutcome={handleLogOutcome}
+          onQuote={() => navigate({ to: "/quote" })}
+        />
       )}
-    </button>
+
+      <BottomNav />
+    </div>
   );
 }
