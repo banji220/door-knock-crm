@@ -8,14 +8,14 @@ type Props = {
   startHour?: number;
 };
 
-/* Map a 0..1 progress value to a heatmap step (0..5) */
-function heatStep(pct: number): 0 | 1 | 2 | 3 | 4 | 5 {
-  if (pct <= 0) return 0;
-  if (pct < 0.2) return 1;
-  if (pct < 0.4) return 2;
-  if (pct < 0.6) return 3;
-  if (pct < 0.85) return 4;
-  return 5;
+/* Map a 0..1 progress value to a heatmap step for the FILL color.
+   0–30% → 2 (warm yellow), 31–60% → 3 (burnt orange),
+   61–99% → 4 (deep red-brown), 100%+ → 5 (dark chocolate-red). */
+function heatStep(pct: number): 2 | 3 | 4 | 5 {
+  if (pct >= 1) return 5;
+  if (pct > 0.6) return 4;
+  if (pct > 0.3) return 3;
+  return 2;
 }
 
 export function DailyMission({ current, goal, startHour = 9 }: Props) {
