@@ -66,6 +66,8 @@ function MePage() {
     return map;
   }, [logged]);
 
+  const streaks = useMemo(() => computeStreaks(buildYearOfActivity()), []);
+
   const closeRate =
     STATS.quotes > 0 ? Math.round((STATS.closes / STATS.quotes) * 100) : 0;
 
