@@ -241,7 +241,7 @@ function MapPage() {
           pin={selected}
           onClose={() => setSelected(null)}
           onLogOutcome={handleLogOutcome}
-          onQuote={() => navigate({ to: "/quote" })}
+          onQuote={() => navigate({ to: "/quote", search: { address: selected.address, mode: "quote" } })}
         />
       )}
 
