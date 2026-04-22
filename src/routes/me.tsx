@@ -246,18 +246,18 @@ function MePage() {
             <div className="absolute inset-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums text-foreground">
               {logged} / {target} doors
             </div>
-            {/* Same label, clipped to the filled side — cream on ink */}
+            {/* Same label clipped to the filled side — cream on ink.
+                Inner label spans the full track width so centering matches. */}
             <div
               className="absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-300"
               style={{ width: `${pctClamp * 100}%` }}
               aria-hidden
             >
-              <div className="absolute inset-y-0 left-0 right-0 w-full flex items-center justify-center text-sm font-mono font-bold tabular-nums text-background"
-                style={{ width: "var(--bar-w, 100%)" }}
+              <div
+                className="absolute inset-y-0 left-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums text-background"
+                style={{ width: `${100 / Math.max(pctClamp, 0.0001)}%` }}
               >
-                <span style={{ transform: "translateX(0)" }}>
-                  {logged} / {target} doors
-                </span>
+                {logged} / {target} doors
               </div>
             </div>
           </div>
