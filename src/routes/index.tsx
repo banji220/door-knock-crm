@@ -116,76 +116,78 @@ function TodayPage() {
         />
       }
     >
-      <ActionSection label="Appointments Today" count={appointmentsToday.length}>
-        {appointmentsToday.map((a) => (
-          <li key={a.id}>
-            <ActionItem
-              dueLabel={fmtTime(a.time)}
-              name={a.name}
-              address={a.address}
-              phone={a.phone}
-              price={a.price}
-            />
-          </li>
-        ))}
-      </ActionSection>
-
-      {/* JOBS TODAY */}
-      <ActionSection label="Jobs Today" count={jobsToday.length}>
-        {jobsToday.map((j) => (
-          <li key={j.id}>
-            <ActionItem
-              dueLabel={fmtTime(j.scheduledFor)}
-              name={j.customerName}
-              address={j.address}
-              phone={phoneFor(j.address)}
-              price={j.price}
-            />
-          </li>
-        ))}
-      </ActionSection>
-
-      {/* FOLLOW-UPS DUE */}
-      <ActionSection label="Follow-Ups Due" count={followUpsDue.length}>
-        {followUpsDue.map((f) => {
-          const due = fmtDueLabel(f.dueDate);
-          return (
-            <li key={f.id}>
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 lg:items-start">
+        <ActionSection label="Appointments Today" count={appointmentsToday.length}>
+          {appointmentsToday.map((a) => (
+            <li key={a.id}>
               <ActionItem
-                dueLabel={due.label}
-                overdue={due.overdue}
-                name={f.leadName}
-                address={f.address}
-                phone={phoneFor(f.address)}
+                dueLabel={fmtTime(a.time)}
+                name={a.name}
+                address={a.address}
+                phone={a.phone}
+                price={a.price}
               />
             </li>
-          );
-        })}
-      </ActionSection>
+          ))}
+        </ActionSection>
 
-      {/* EXPIRING QUOTES */}
-      <ActionSection label="Expiring Quotes" count={expiringQuotes.length}>
-        {expiringQuotes.map((q) => {
-          const days = daysAgo(q.createdAt);
-          return (
-            <li key={q.id}>
+        {/* JOBS TODAY */}
+        <ActionSection label="Jobs Today" count={jobsToday.length}>
+          {jobsToday.map((j) => (
+            <li key={j.id}>
               <ActionItem
-                dueLabel={`${days}d old`}
-                overdue={days >= 7}
-                name={q.leadName}
-                address={q.address}
-                phone={phoneFor(q.address)}
-                price={q.price}
+                dueLabel={fmtTime(j.scheduledFor)}
+                name={j.customerName}
+                address={j.address}
+                phone={phoneFor(j.address)}
+                price={j.price}
               />
             </li>
-          );
-        })}
-      </ActionSection>
+          ))}
+        </ActionSection>
+
+        {/* FOLLOW-UPS DUE */}
+        <ActionSection label="Follow-Ups Due" count={followUpsDue.length}>
+          {followUpsDue.map((f) => {
+            const due = fmtDueLabel(f.dueDate);
+            return (
+              <li key={f.id}>
+                <ActionItem
+                  dueLabel={due.label}
+                  overdue={due.overdue}
+                  name={f.leadName}
+                  address={f.address}
+                  phone={phoneFor(f.address)}
+                />
+              </li>
+            );
+          })}
+        </ActionSection>
+
+        {/* EXPIRING QUOTES */}
+        <ActionSection label="Expiring Quotes" count={expiringQuotes.length}>
+          {expiringQuotes.map((q) => {
+            const days = daysAgo(q.createdAt);
+            return (
+              <li key={q.id}>
+                <ActionItem
+                  dueLabel={`${days}d old`}
+                  overdue={days >= 7}
+                  name={q.leadName}
+                  address={q.address}
+                  phone={phoneFor(q.address)}
+                  price={q.price}
+                />
+              </li>
+            );
+          })}
+        </ActionSection>
+      </div>
 
       {/* Quote shortcut */}
       <Link
         to="/quote"
-        className="press-brutal block w-full border-2 border-foreground bg-foreground text-background py-4 text-center font-mono font-bold uppercase tracking-wider"
+        className="press-brutal block w-full lg:max-w-md lg:mx-auto border-2 border-foreground bg-foreground text-background py-4 mt-4 text-center font-mono font-bold uppercase tracking-wider"
       >
         <Plus className="inline size-5 mr-2 -mt-1" strokeWidth={3} />
         New Quote

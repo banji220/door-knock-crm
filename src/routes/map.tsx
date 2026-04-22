@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { BottomNav } from "@/components/BottomNav";
+import { DesktopSidebar } from "@/components/DesktopSidebar";
 import { HouseCard } from "@/components/HouseCard";
 import { Search, Crosshair, Plus } from "lucide-react";
 import {
@@ -185,12 +186,12 @@ function MapPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
+    <div className="fixed inset-0 flex flex-col bg-background lg:left-64">
       {/* Map surface */}
-      <div ref={mapContainer} className="absolute inset-0 bottom-20" />
+      <div ref={mapContainer} className="absolute inset-0 bottom-20 lg:bottom-0" />
 
       {/* Search bar */}
-      <div className="absolute top-3 left-3 right-3 z-20 max-w-[480px] mx-auto">
+      <div className="absolute top-3 left-3 right-3 z-20 max-w-2xl mx-auto lg:max-w-xl lg:mx-0 lg:left-6 lg:right-auto lg:w-96">
         <div className="border-2 border-foreground bg-card flex items-center">
           <Search className="size-4 ml-3 shrink-0" strokeWidth={2.5} />
           <input
@@ -220,7 +221,7 @@ function MapPage() {
       {/* GPS recenter — top right under search */}
       <button
         onClick={recenterGPS}
-        className="press-brutal absolute top-20 right-3 z-20 size-11 border-2 border-foreground bg-card flex items-center justify-center"
+        className="press-brutal absolute top-20 right-3 z-20 size-11 border-2 border-foreground bg-card flex items-center justify-center lg:top-3"
         aria-label="Recenter to my location"
       >
         <Crosshair className="size-5" strokeWidth={2.5} />
@@ -229,7 +230,7 @@ function MapPage() {
       {/* Knock Here FAB */}
       <button
         onClick={handleKnockHere}
-        className="press-brutal absolute bottom-24 right-3 z-20 border-2 border-foreground bg-foreground text-background font-mono font-bold uppercase tracking-wider px-5 py-4 flex items-center gap-2 text-sm"
+        className="press-brutal absolute bottom-24 right-3 z-20 border-2 border-foreground bg-foreground text-background font-mono font-bold uppercase tracking-wider px-5 py-4 flex items-center gap-2 text-sm lg:bottom-6"
       >
         <Plus className="size-5" strokeWidth={3} />
         Knock Here
@@ -245,7 +246,12 @@ function MapPage() {
         />
       )}
 
-      <BottomNav />
+      <div className="lg:hidden">
+        <BottomNav />
+      </div>
+      <div className="hidden lg:block">
+        <DesktopSidebar />
+      </div>
     </div>
   );
 }

@@ -69,8 +69,12 @@ function MePage() {
     { label: "Close Rate", value: `${closeRate}%`, accent: true },
   ];
 
+  /* ===== Desktop layout (≥1024px) =====
+     Hero strip (profile + today stats) → wide heatmap → 3-col modules.
+     Mobile/tablet keeps the existing single-column stack. */
   return (
     <AppShell
+      wide
       header={
         <PageHeader
           eyebrow="Me"
@@ -83,82 +87,187 @@ function MePage() {
         />
       }
     >
-      {/* ===== Profile ===== */}
-      <section className="mb-6 flex items-center gap-4">
-        <div
-          className="size-20 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-3xl"
-          aria-label="Avatar"
-        >
-          HG
-        </div>
-        <div className="min-w-0">
-          <div className="text-xl font-bold font-display tracking-tight leading-none">
-            Holy Giraffe
-          </div>
-          <div className="mt-1.5 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
-            Window Cleaning Pro
-          </div>
-        </div>
-      </section>
-
-      {/* ===== Today's Stats ===== */}
-      <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-        Today
-      </div>
-      <div className="grid grid-cols-2 gap-2 mb-6">
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="border-2 border-foreground bg-card p-4 text-center"
-          >
+      {/* ============================================================
+          DESKTOP — wide dashboard (lg+)
+          ============================================================ */}
+      <div className="hidden lg:block max-w-[1400px] mx-auto w-full">
+        {/* Hero strip — profile + today's stats */}
+        <section className="grid grid-cols-12 gap-4 mb-6">
+          {/* Profile */}
+          <div className="col-span-4 border-2 border-foreground bg-card p-6 flex items-center gap-5">
             <div
-              className={`text-3xl font-bold font-mono leading-none tabular-nums ${
-                s.accent ? "text-primary" : "text-foreground"
-              }`}
+              className="size-24 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-4xl"
+              aria-label="Avatar"
             >
-              {s.value}
+              HG
             </div>
-            <div className="mt-2 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
-              {s.label}
+            <div className="min-w-0">
+              <div className="text-2xl font-bold font-display tracking-tight leading-none">
+                Holy Giraffe
+              </div>
+              <div className="mt-2 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                Window Cleaning Pro
+              </div>
+              <div className="mt-3 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+                Streak{" "}
+                <span className="font-bold text-foreground tabular-nums">
+                  {streaks.current}d
+                </span>{" "}
+                · Best{" "}
+                <span className="font-bold text-foreground tabular-nums">
+                  {streaks.best}d
+                </span>
+              </div>
             </div>
           </div>
-        ))}
+
+          {/* Today's Stats */}
+          <div className="col-span-8">
+            <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+              Today
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  className="border-2 border-foreground bg-card p-5 text-center"
+                >
+                  <div
+                    className={`text-4xl font-bold font-mono leading-none tabular-nums ${
+                      s.accent ? "text-primary" : "text-foreground"
+                    }`}
+                  >
+                    {s.value}
+                  </div>
+                  <div className="mt-2 text-[11px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                    {s.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Wide heatmap — full focal point */}
+        <section className="mb-6">
+          <ContributionHeatmap />
+        </section>
+
+        {/* Weekly row — goal + insights side by side */}
+        <section className="grid grid-cols-12 gap-4 mb-6">
+          <div className="col-span-5">
+            <WeeklyGoal
+              data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
+              weeklyTarget={weeklyTarget}
+              onTargetChange={setWeeklyTarget}
+            />
+          </div>
+          <div className="col-span-7">
+            <WeeklyInsights
+              data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
+              weeklyTarget={weeklyTarget}
+            />
+          </div>
+        </section>
+
+        {/* Modules row — streak / momentum / calendar */}
+        <section className="grid grid-cols-12 gap-4 mb-6">
+          <div className="col-span-4">
+            <StreakPanel
+              currentStreak={streaks.current}
+              longestStreak={streaks.best}
+            />
+          </div>
+          <div className="col-span-5">
+            <MomentumMeter />
+          </div>
+          <div className="col-span-3">
+            <GoogleCalendarCard />
+          </div>
+        </section>
+
+        {/* Badges — full width */}
+        <section className="mb-6">
+          <BadgesPanel />
+        </section>
+
+        <div className="text-center pt-2 pb-6">
+          <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
+            Sign out
+          </button>
+        </div>
       </div>
 
-      {/* ===== Contribution Heatmap ===== */}
-      <div className="mb-4">
-        <ContributionHeatmap />
-      </div>
+      {/* ============================================================
+          MOBILE / TABLET — original stacked layout (<lg)
+          ============================================================ */}
+      <div className="lg:hidden">
+        <section className="mb-6 flex items-center gap-4">
+          <div
+            className="size-20 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-3xl"
+            aria-label="Avatar"
+          >
+            HG
+          </div>
+          <div className="min-w-0">
+            <div className="text-xl font-bold font-display tracking-tight leading-none">
+              Holy Giraffe
+            </div>
+            <div className="mt-1.5 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+              Window Cleaning Pro
+            </div>
+          </div>
+        </section>
 
-      {/* ===== This Week stack ===== */}
-      <div className="flex flex-col gap-4 mb-8">
-        <WeeklyGoal
-          data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
-          weeklyTarget={weeklyTarget}
-          onTargetChange={setWeeklyTarget}
-        />
-        <WeeklyInsights
-          data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
-          weeklyTarget={weeklyTarget}
-        />
-      </div>
+        <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+          Today
+        </div>
+        <div className="grid grid-cols-2 gap-2 mb-6">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="border-2 border-foreground bg-card p-4 text-center"
+            >
+              <div
+                className={`text-3xl font-bold font-mono leading-none tabular-nums ${
+                  s.accent ? "text-primary" : "text-foreground"
+                }`}
+              >
+                {s.value}
+              </div>
+              <div className="mt-2 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* ===== Streak Panel ===== */}
-      <StreakPanel currentStreak={streaks.current} longestStreak={streaks.best} />
+        <div className="mb-4">
+          <ContributionHeatmap />
+        </div>
 
-      {/* ===== Momentum Meter ===== */}
-      <MomentumMeter />
+        <div className="flex flex-col gap-4 mb-8">
+          <WeeklyGoal
+            data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
+            weeklyTarget={weeklyTarget}
+            onTargetChange={setWeeklyTarget}
+          />
+          <WeeklyInsights
+            data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
+            weeklyTarget={weeklyTarget}
+          />
+        </div>
 
-      {/* ===== Badges ===== */}
-      <BadgesPanel />
+        <StreakPanel currentStreak={streaks.current} longestStreak={streaks.best} />
+        <MomentumMeter />
+        <BadgesPanel />
+        <GoogleCalendarCard />
 
-      {/* ===== Google Calendar Connection ===== */}
-      <GoogleCalendarCard />
-
-      <div className="text-center pt-2 pb-4">
-        <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
-          Sign out
-        </button>
+        <div className="text-center pt-2 pb-4">
+          <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
+            Sign out
+          </button>
+        </div>
       </div>
     </AppShell>
   );

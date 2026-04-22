@@ -143,7 +143,7 @@ function ClientsPage() {
 
       {/* All customers */}
       <SectionHeader count={all.length}>All Customers</SectionHeader>
-      <ul className="space-y-2">
+      <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
         {all.length === 0 ? (
           <Card as="li" className="border-dashed p-5 text-center">
             <p className="font-mono font-bold uppercase">No matches</p>

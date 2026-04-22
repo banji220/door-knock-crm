@@ -226,7 +226,7 @@ function DealsPage() {
               </p>
             </Card>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
               {hottest.map((c) => (
                 <DealRow
                   key={c.id}
@@ -253,7 +253,7 @@ function DealsPage() {
               </p>
             </Card>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-2 lg:grid lg:grid-cols-2 lg:gap-3 lg:space-y-0">
               {pipeline.map((c) => (
                 <DealRow
                   key={c.id}
