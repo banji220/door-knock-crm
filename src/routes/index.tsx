@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { StatTile } from "@/components/StatTile";
+import { Card, Button, Label, SectionHeader, Input, Badge } from "@/components/ui-brutal";
 import { mockKnocks, todayStats, type KnockOutcome } from "@/lib/mock-data";
 import { Check, X, Phone, FileText, HelpCircle, Plus } from "lucide-react";
 
@@ -10,34 +10,26 @@ export const Route = createFileRoute("/")({
 });
 
 const outcomes: { key: KnockOutcome; label: string; icon: typeof Check; cls: string }[] = [
-  { key: "booked", label: "Booked", icon: Check, cls: "bg-success text-success-foreground" },
-  { key: "quoted", label: "Quoted", icon: FileText, cls: "bg-amber text-ink" },
-  { key: "callback", label: "Callback", icon: Phone, cls: "bg-warning text-ink" },
-  { key: "no-answer", label: "No Answer", icon: HelpCircle, cls: "bg-card text-ink" },
-  { key: "not-interested", label: "Pass", icon: X, cls: "bg-destructive text-destructive-foreground" },
+  { key: "booked", label: "Booked", icon: Check, cls: "bg-[var(--success)] text-[var(--success-foreground)]" },
+  { key: "quoted", label: "Quoted", icon: FileText, cls: "bg-[var(--amber)] text-foreground" },
+  { key: "callback", label: "Callback", icon: Phone, cls: "bg-[var(--warning)] text-foreground" },
+  { key: "no-answer", label: "No Answer", icon: HelpCircle, cls: "bg-card text-foreground" },
 ];
 
-function outcomeBadge(o: KnockOutcome) {
-  const map: Record<KnockOutcome, string> = {
-    booked: "bg-success text-success-foreground",
-    quoted: "bg-amber text-ink",
-    callback: "bg-warning text-ink",
-    "no-answer": "bg-muted text-ink",
-    "not-interested": "bg-destructive text-destructive-foreground",
-  };
-  const labels: Record<KnockOutcome, string> = {
-    booked: "BOOKED",
-    quoted: "QUOTED",
-    callback: "CALLBACK",
-    "no-answer": "NO ANSWER",
-    "not-interested": "PASS",
-  };
-  return (
-    <span className={`px-2 py-0.5 text-[10px] font-display uppercase border-2 border-ink ${map[o]}`}>
-      {labels[o]}
-    </span>
-  );
-}
+const badgeVariantMap: Record<KnockOutcome, "default" | "primary" | "accent" | "destructive" | "success"> = {
+  booked: "success",
+  quoted: "accent",
+  callback: "accent",
+  "no-answer": "default",
+  "not-interested": "destructive",
+};
+const badgeLabel: Record<KnockOutcome, string> = {
+  booked: "Booked",
+  quoted: "Quoted",
+  callback: "Callback",
+  "no-answer": "No Ans",
+  "not-interested": "Pass",
+};
 
 function KnockPage() {
   const [address, setAddress] = useState("");
@@ -60,92 +52,104 @@ function KnockPage() {
       subtitle={`Today · ${streetMode}`}
       right={
         <div className="text-right">
-          <div className="text-[10px] font-mono uppercase opacity-70">Knocks</div>
-          <div className="text-3xl font-display leading-none">{knocks.length}</div>
+          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-foreground/70">
+            Knocks
+          </div>
+          <div className="text-3xl font-mono font-bold leading-none mt-0.5">
+            {knocks.length}
+          </div>
         </div>
       }
     >
-      {/* Stats strip */}
+      {/* Stats — 3 cards */}
       <div className="grid grid-cols-3 gap-2 mb-5">
-        <StatTile label="Quoted" value={todayStats.quoted} />
-        <StatTile label="Booked" value={todayStats.booked} accent />
-        <StatTile label="Pipeline" value={`£${todayStats.pipeline}`} />
+        <Card className="p-3">
+          <Label className="text-[10px] tracking-[0.15em]">Quoted</Label>
+          <div className="text-3xl font-mono font-bold mt-1 leading-none">{todayStats.quoted}</div>
+        </Card>
+        <Card className="p-3 bg-foreground text-background">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] opacity-70">Booked</div>
+          <div className="text-3xl font-mono font-bold mt-1 leading-none">{todayStats.booked}</div>
+        </Card>
+        <Card className="p-3">
+          <Label className="text-[10px] tracking-[0.15em]">Pipeline</Label>
+          <div className="text-3xl font-mono font-bold mt-1 leading-none">£{todayStats.pipeline}</div>
+        </Card>
       </div>
 
       {/* Address input */}
       <div className="mb-3">
-        <label className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-          Door / Address
-        </label>
-        <input
-          type="text"
+        <Label htmlFor="addr" className="mb-1">Door / Address</Label>
+        <Input
+          id="addr"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          placeholder={`e.g. 24 ${streetMode}`}
-          className="w-full mt-1 border-brutal-thick bg-card px-4 py-3 text-lg font-mono placeholder:text-muted-foreground focus:outline-none focus:bg-amber/20"
+          placeholder={`24 ${streetMode}`}
         />
       </div>
 
-      {/* Outcome buttons — thumb zone */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {outcomes.slice(0, 4).map(({ key, label, icon: Icon, cls }) => (
+      {/* Outcome buttons */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        {outcomes.map(({ key, label, icon: Icon, cls }) => (
           <button
             key={key}
             onClick={() => logKnock(key)}
-            className={`press-brutal border-brutal-thick py-5 flex flex-col items-center gap-2 ${cls}`}
+            className={`press-brutal border-2 border-foreground py-5 flex flex-col items-center gap-2 font-mono font-bold uppercase tracking-wider text-sm ${cls}`}
           >
             <Icon className="size-7" strokeWidth={2.5} />
-            <span className="font-display uppercase text-base">{label}</span>
+            {label}
           </button>
         ))}
-        <button
-          onClick={() => logKnock("not-interested")}
-          className="press-brutal border-brutal-thick py-4 flex items-center justify-center gap-3 col-span-2 bg-destructive text-destructive-foreground"
-        >
-          <X className="size-6" strokeWidth={3} />
-          <span className="font-display uppercase text-base">Not Interested</span>
-        </button>
       </div>
+      <Button
+        variant="destructive"
+        block
+        onClick={() => logKnock("not-interested")}
+        className="mb-6 py-4"
+      >
+        <X className="size-5" strokeWidth={3} />
+        Not Interested
+      </Button>
 
       {/* Recent knocks */}
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-display uppercase">Recent</h2>
-        <Link
-          to="/quote"
-          className="text-xs font-display uppercase tracking-wider px-2 py-1 border-2 border-ink bg-amber press-brutal flex items-center gap-1"
-        >
-          <Plus className="size-3" strokeWidth={3} />
-          Quote
-        </Link>
-      </div>
+      <SectionHeader
+        count={knocks.length}
+        action={
+          <Link
+            to="/quote"
+            className="press-brutal inline-flex items-center gap-1 text-xs font-mono font-bold uppercase tracking-wider px-2 py-1 border-2 border-foreground bg-[var(--amber)] text-foreground"
+          >
+            <Plus className="size-3" strokeWidth={3} />
+            Quote
+          </Link>
+        }
+      >
+        Recent
+      </SectionHeader>
+
       <ul className="space-y-2">
         {knocks.slice(0, 12).map((k) => (
-          <li
-            key={k.id}
-            className="border-brutal bg-card px-3 py-2.5 flex items-center justify-between gap-3"
-          >
+          <Card as="li" key={k.id} className="px-3 py-2.5 flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <div className="font-mono text-sm font-medium truncate">{k.address}</div>
+              <div className="font-mono text-sm font-bold truncate">{k.address}</div>
               {k.notes && (
-                <div className="text-xs text-muted-foreground truncate">{k.notes}</div>
+                <div className="text-xs font-mono text-muted-foreground truncate">{k.notes}</div>
               )}
             </div>
-            {outcomeBadge(k.outcome)}
-          </li>
+            <Badge variant={badgeVariantMap[k.outcome]}>{badgeLabel[k.outcome]}</Badge>
+          </Card>
         ))}
       </ul>
 
       {/* Street switch */}
-      <div className="mt-6 border-brutal bg-card p-3">
-        <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-          Current street
-        </div>
+      <SectionHeader>Current Street</SectionHeader>
+      <Card>
         <input
           value={streetMode}
           onChange={(e) => setStreetMode(e.target.value)}
-          className="w-full mt-1 bg-transparent text-lg font-display uppercase focus:outline-none"
+          className="w-full bg-transparent text-lg font-mono font-bold uppercase focus:outline-none"
         />
-      </div>
+      </Card>
     </AppShell>
   );
 }

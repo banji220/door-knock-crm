@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Card, Badge, SectionHeader } from "@/components/ui-brutal";
 import { mockJobs, type Job } from "@/lib/mock-data";
 import { MapPin, CheckCircle2, Navigation } from "lucide-react";
 
@@ -30,12 +31,9 @@ function JobsPage() {
       jobs.map((j) => {
         if (j.id !== id) return j;
         const next: Job["status"] =
-          j.status === "scheduled"
-            ? "in-progress"
-            : j.status === "in-progress"
-              ? "done"
-              : j.status === "done"
-                ? "paid"
+          j.status === "scheduled" ? "in-progress"
+            : j.status === "in-progress" ? "done"
+              : j.status === "done" ? "paid"
                 : "paid";
         return { ...j, status: next };
       }),
@@ -44,17 +42,14 @@ function JobsPage() {
   };
 
   return (
-    <AppShell
-      title="Jobs"
-      subtitle={`${done}/${filtered.length} done · £${total} route`}
-    >
+    <AppShell title="Jobs" subtitle={`${done}/${filtered.length} done · £${total} route`}>
       <div className="grid grid-cols-2 gap-2 mb-5">
         {(["today", "tomorrow"] as const).map((d) => (
           <button
             key={d}
             onClick={() => setDay(d)}
-            className={`py-3 border-brutal-thick font-display uppercase text-sm press-brutal ${
-              day === d ? "bg-ink text-cream" : "bg-card"
+            className={`press-brutal py-3 border-2 border-foreground font-mono font-bold uppercase tracking-wider text-sm ${
+              day === d ? "bg-foreground text-background" : "bg-card"
             }`}
           >
             {d}
@@ -62,84 +57,71 @@ function JobsPage() {
         ))}
       </div>
 
+      <SectionHeader count={filtered.length}>Route</SectionHeader>
+
       <ol className="space-y-3">
         {filtered.map((job) => {
           const cfg = statusConfig[job.status];
           return (
-            <li
-              key={job.id}
-              className={`border-brutal-thick p-4 ${cfg.bg}`}
-            >
+            <Card as="li" key={job.id} className={`p-4 ${cfg.bg}`}>
               <div className="flex items-start gap-3">
-                <div className="size-10 border-2 border-ink bg-cream flex items-center justify-center font-display text-lg shrink-0">
+                <div className="size-10 border-2 border-foreground bg-background flex items-center justify-center font-mono font-bold text-lg shrink-0">
                   {job.routeOrder}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline justify-between gap-2">
-                    <h3 className="font-display uppercase text-lg leading-none">
+                    <h3 className="font-mono font-bold uppercase text-base leading-none">
                       {job.customerName}
                     </h3>
-                    <span className="font-display text-2xl leading-none">
-                      £{job.price}
-                    </span>
+                    <span className="font-mono font-bold text-2xl leading-none">£{job.price}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1.5 text-sm font-mono text-ink/80">
+                  <div className="flex items-center gap-1.5 mt-1.5 text-sm font-mono text-foreground/80">
                     <MapPin className="size-3.5" />
                     {job.address}
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 border-2 border-ink bg-cream">
-                      {fmtTime(job.scheduledFor)}
-                    </span>
-                    <span
-                      className={`text-[10px] font-display uppercase px-2 py-0.5 border-2 border-ink ${cfg.badge}`}
-                    >
-                      {cfg.label}
-                    </span>
+                    <Badge>{fmtTime(job.scheduledFor)}</Badge>
+                    <Badge variant={cfg.variant}>{cfg.label}</Badge>
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-3">
                 <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                    job.address,
-                  )}`}
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address)}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="border-2 border-ink bg-cream press-brutal py-2.5 flex items-center justify-center gap-1.5 font-display uppercase text-xs"
+                  className="press-brutal border-2 border-foreground bg-background py-2.5 flex items-center justify-center gap-1.5 font-mono font-bold uppercase tracking-wider text-xs"
                 >
                   <Navigation className="size-4" strokeWidth={2.5} />
                   Navigate
                 </a>
                 <button
                   onClick={() => advance(job.id)}
-                  className="border-2 border-ink bg-success text-success-foreground press-brutal py-2.5 flex items-center justify-center gap-1.5 font-display uppercase text-xs"
+                  className="press-brutal border-2 border-foreground bg-[var(--success)] text-[var(--success-foreground)] py-2.5 flex items-center justify-center gap-1.5 font-mono font-bold uppercase tracking-wider text-xs"
                 >
                   <CheckCircle2 className="size-4" strokeWidth={2.5} />
                   {nextLabel(job.status)}
                 </button>
               </div>
-            </li>
+            </Card>
           );
         })}
         {filtered.length === 0 && (
-          <li className="border-brutal-thick border-dashed bg-card p-8 text-center">
-            <p className="font-display uppercase text-lg">No jobs {day}</p>
-            <p className="text-sm font-mono text-muted-foreground mt-1">
-              Go knock some doors.
-            </p>
-          </li>
+          <Card as="li" className="border-dashed p-8 text-center">
+            <p className="font-mono font-bold uppercase text-base">No jobs {day}</p>
+            <p className="text-sm font-mono text-muted-foreground mt-1">Go knock some doors.</p>
+          </Card>
         )}
       </ol>
     </AppShell>
   );
 }
 
-const statusConfig: Record<Job["status"], { label: string; bg: string; badge: string }> = {
-  scheduled: { label: "Scheduled", bg: "bg-card", badge: "bg-cream" },
-  "in-progress": { label: "Working", bg: "bg-amber/40", badge: "bg-amber" },
-  done: { label: "Done", bg: "bg-success/15", badge: "bg-success text-success-foreground" },
-  paid: { label: "Paid", bg: "bg-success/30", badge: "bg-success text-success-foreground" },
+const statusConfig: Record<Job["status"], { label: string; bg: string; variant: "default" | "primary" | "accent" | "destructive" | "success" }> = {
+  scheduled: { label: "Scheduled", bg: "", variant: "default" },
+  "in-progress": { label: "Working", bg: "bg-[var(--amber)]/40", variant: "accent" },
+  done: { label: "Done", bg: "bg-[var(--success)]/15", variant: "success" },
+  paid: { label: "Paid", bg: "bg-[var(--success)]/30", variant: "success" },
 };
 
 function nextLabel(s: Job["status"]) {

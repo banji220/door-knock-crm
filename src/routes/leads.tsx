@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Card, Badge, Input, SectionHeader } from "@/components/ui-brutal";
 import { mockLeads, type Lead } from "@/lib/mock-data";
 import { Search, Phone, MapPin } from "lucide-react";
 
@@ -10,12 +11,12 @@ export const Route = createFileRoute("/leads")({
 
 const statusOrder: Lead["status"][] = ["hot", "warm", "cold", "won", "lost"];
 
-const statusCfg: Record<Lead["status"], { bg: string; label: string }> = {
-  hot: { bg: "bg-destructive text-destructive-foreground", label: "HOT" },
-  warm: { bg: "bg-amber text-ink", label: "WARM" },
-  cold: { bg: "bg-card text-ink", label: "COLD" },
-  won: { bg: "bg-success text-success-foreground", label: "WON" },
-  lost: { bg: "bg-muted text-muted-foreground", label: "LOST" },
+const statusVariant: Record<Lead["status"], "destructive" | "accent" | "default" | "success" | "primary"> = {
+  hot: "destructive",
+  warm: "accent",
+  cold: "default",
+  won: "success",
+  lost: "default",
 };
 
 function LeadsPage() {
@@ -31,10 +32,7 @@ function LeadsPage() {
           l.name.toLowerCase().includes(q.toLowerCase()) ||
           l.address.toLowerCase().includes(q.toLowerCase()),
       )
-      .sort(
-        (a, b) =>
-          statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status),
-      );
+      .sort((a, b) => statusOrder.indexOf(a.status) - statusOrder.indexOf(b.status));
   }, [q, filter]);
 
   const counts = useMemo(() => {
@@ -49,12 +47,12 @@ function LeadsPage() {
     <AppShell title="Leads" subtitle={`${mockLeads.length} total`}>
       {/* Search */}
       <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
-        <input
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none z-10" />
+        <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name or address"
-          className="w-full border-brutal-thick bg-card pl-11 pr-4 py-3 text-base font-mono focus:outline-none focus:bg-amber/20"
+          className="pl-11"
         />
       </div>
 
@@ -64,8 +62,8 @@ function LeadsPage() {
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`shrink-0 px-3 py-1.5 border-2 border-ink font-display uppercase text-xs press-brutal ${
-              filter === s ? "bg-ink text-cream" : "bg-card"
+            className={`press-brutal shrink-0 px-3 py-1.5 border-2 border-foreground font-mono font-bold uppercase tracking-wider text-xs ${
+              filter === s ? "bg-foreground text-background" : "bg-card"
             }`}
           >
             {s} · {counts[s] ?? 0}
@@ -73,48 +71,45 @@ function LeadsPage() {
         ))}
       </div>
 
+      <SectionHeader count={filtered.length}>Results</SectionHeader>
+
       <ul className="space-y-2">
         {filtered.map((lead) => (
-          <li
-            key={lead.id}
-            className="border-brutal-thick bg-card p-3 flex items-center gap-3"
-          >
-            <div className="size-12 border-2 border-ink bg-amber font-display text-lg flex items-center justify-center shrink-0">
+          <Card as="li" key={lead.id} className="p-3 flex items-center gap-3">
+            <div className="size-12 border-2 border-foreground bg-[var(--amber)] font-mono font-bold text-lg flex items-center justify-center shrink-0">
               {lead.name.charAt(0)}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between gap-2">
-                <h3 className="font-display uppercase text-base leading-none truncate">
+                <h3 className="font-mono font-bold uppercase text-sm leading-none truncate">
                   {lead.name}
                 </h3>
-                <span
-                  className={`text-[10px] font-display uppercase px-1.5 py-0.5 border-2 border-ink shrink-0 ${statusCfg[lead.status].bg}`}
-                >
-                  {statusCfg[lead.status].label}
-                </span>
+                <Badge variant={statusVariant[lead.status]}>
+                  {lead.status}
+                </Badge>
               </div>
               <div className="flex items-center gap-1 mt-1 text-xs font-mono text-muted-foreground truncate">
                 <MapPin className="size-3 shrink-0" />
                 {lead.address}
               </div>
               {lead.notes && (
-                <p className="text-xs mt-1 truncate text-ink/70">{lead.notes}</p>
+                <p className="text-xs font-mono mt-1 truncate text-foreground/70">{lead.notes}</p>
               )}
             </div>
             {lead.phone && (
               <a
                 href={`tel:${lead.phone}`}
-                className="size-10 border-2 border-ink bg-amber press-brutal flex items-center justify-center shrink-0"
+                className="press-brutal size-10 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center shrink-0"
               >
                 <Phone className="size-4" strokeWidth={2.5} />
               </a>
             )}
-          </li>
+          </Card>
         ))}
         {filtered.length === 0 && (
-          <li className="border-brutal-thick border-dashed bg-card p-8 text-center">
-            <p className="font-display uppercase">No matches</p>
-          </li>
+          <Card as="li" className="border-dashed p-8 text-center">
+            <p className="font-mono font-bold uppercase">No matches</p>
+          </Card>
         )}
       </ul>
     </AppShell>
