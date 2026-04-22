@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/AppShell";
 
 import { QuickLogCard } from "@/components/QuickLogCard";
@@ -72,11 +72,16 @@ function TodayPage() {
   const phoneFor = (address: string) =>
     mockLeads.find((l) => l.address === address)?.phone;
 
-  const fullDate = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const [fullDate, setFullDate] = useState("");
+  useEffect(() => {
+    setFullDate(
+      new Date().toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
+    );
+  }, []);
   const pendingActions =
     appointmentsToday.length +
     jobsToday.filter((j) => j.status === "scheduled").length +
