@@ -5,6 +5,7 @@ import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 import { StreakPanel } from "@/components/StreakPanel";
 import { MomentumMeter } from "@/components/MomentumMeter";
 import { BadgesPanel } from "@/components/BadgesPanel";
+import { GoogleCalendarCard } from "@/components/GoogleCalendarCard";
 import { WeeklyGoal } from "@/components/WeeklyGoal";
 import { WeeklyInsights } from "@/components/WeeklyInsights";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -150,6 +151,9 @@ function MePage() {
 
       {/* ===== Badges ===== */}
       <BadgesPanel />
+
+      {/* ===== Google Calendar Connection ===== */}
+      <GoogleCalendarCard />
 
       <div className="text-center pt-2 pb-4">
         <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
