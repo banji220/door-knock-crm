@@ -6,7 +6,7 @@ import { ActionSection } from "@/components/ActionSection";
 import { ActionItem } from "@/components/ActionItem";
 import {
   mockKnocks, mockFollowUps, mockJobs, mockQuotes, mockAppointments,
-  mockLeads, todayStats, type Knock,
+  mockLeads, todayStats,
 } from "@/lib/mock-data";
 import { Plus } from "lucide-react";
 
