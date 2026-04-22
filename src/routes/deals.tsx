@@ -231,6 +231,15 @@ function DealsPage() {
                   key={c.id}
                   card={c}
                   onOpen={() => openHouse(c)}
+                  onCall={(e) => callPhone(e, c.phone)}
+                  onNav={(e) => navigateMaps(e, c.address)}
+                />
+              ))}
+            </ul>
+          )}
+        </Section>
+
+        {/* PIPELINE */}
         <Section
           label="Pipeline"
           count={pipeline.length}
@@ -253,7 +262,7 @@ function DealsPage() {
                       ? `Quoted ${timeAgoLabel(c.daysSince)}`
                       : `Lead captured ${timeAgoLabel(c.daysSince)}`
                   }
-                  onOpen={() => openHouse(c.address)}
+                  onOpen={() => openHouse(c)}
                   onCall={(e) => callPhone(e, c.phone)}
                   onNav={(e) => navigateMaps(e, c.address)}
                 />
