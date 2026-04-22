@@ -43,6 +43,14 @@ export function StreakPanel() {
         ? "bg-card text-muted-foreground border-2 border-muted-foreground/40"
         : "bg-card text-foreground border-2 border-foreground";
 
+  if (!mounted) {
+    return (
+      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
+        <div className="h-[180px]" aria-hidden />
+      </section>
+    );
+  }
+
   return (
     <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
       <div className="flex items-center justify-between mb-3">

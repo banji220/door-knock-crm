@@ -54,6 +54,14 @@ export function MomentumMeter() {
     i === last7.length - 1 ? "Today" : DOW_LETTERS[d.date.getDay()],
   );
 
+  if (!mounted) {
+    return (
+      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
+        <div className="h-[260px]" aria-hidden />
+      </section>
+    );
+  }
+
   return (
     <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
       <div className="flex items-center justify-between mb-3">
