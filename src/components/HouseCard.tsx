@@ -3,6 +3,7 @@ import { Card, Badge, Button } from "@/components/ui-brutal";
 import { Phone, MessageSquare, Navigation, X } from "lucide-react";
 import { mockKnocks, mockJobs, type KnockOutcome } from "@/lib/mock-data";
 import { OUTCOME_META, type HousePin } from "@/lib/map-data";
+import { formatMoney } from "@/lib/format";
 
 const OUTCOMES: KnockOutcome[] = [
   "booked", "quoted", "callback", "no-answer", "not-interested",
