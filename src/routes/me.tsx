@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ContributionHeatmap } from "@/components/ContributionHeatmap";
+import { StreakPanel } from "@/components/StreakPanel";
+import { MomentumMeter } from "@/components/MomentumMeter";
 
 export const Route = createFileRoute("/me")({
   component: MePage,
@@ -316,6 +318,12 @@ function MePage() {
 
       {/* ===== Contribution Heatmap ===== */}
       <ContributionHeatmap />
+
+      {/* ===== Streak Panel ===== */}
+      <StreakPanel />
+
+      {/* ===== Momentum Meter ===== */}
+      <MomentumMeter />
 
 
       <div className="text-center pt-2 pb-4">
