@@ -118,6 +118,8 @@ export function ContributionHeatmap() {
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
+  const rangeMenuRef = useRef<HTMLDivElement>(null);
 
   /* Default range by breakpoint — mobile:90d, tablet:180d, desktop:1y. */
   const [rangeUserSet, setRangeUserSet] = useState(false);
@@ -128,7 +130,20 @@ export function ContributionHeatmap() {
   const setRangeManual = (r: Range) => {
     setRangeUserSet(true);
     setRange(r);
+    setRangeMenuOpen(false);
   };
+
+  /* Close range popover on outside click */
+  useEffect(() => {
+    if (!rangeMenuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!rangeMenuRef.current?.contains(e.target as Node)) {
+        setRangeMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [rangeMenuOpen]);
 
   const allDays = useMemo(() => buildYearOfActivity(), []);
   const { current: currentStreak, best: bestStreak } = useMemo(
