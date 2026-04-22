@@ -118,27 +118,40 @@ export function buildYearOfActivity(): DayRecord[] {
     days[bestEnd + 1].wins = 0;
   }
 
-  /* Calibrate this week's volume so momentum lands ~72.
-     Aim: avg daily doors ≈ 22 (last 7 days), trend +18% vs prior 7 days. */
+  /* Calibrate the last 14 days so momentum lands ~72 with a 12d streak.
+     Consistency 100% (no rest within streak) → V·0.4 + T·0.15 must ≈ 27.
+     thisWeek total ≈ 73 (avg ≈ 10.5 → volume ≈ 42),
+     prevWeek total ≈ 62 (trend +18% → trendScore ≈ 68).
+     Score ≈ 100·0.45 + 42·0.4 + 68·0.15 ≈ 72. */
   const last7Start = days.length - 7;
-  const targetThisWeek = [22, 28, 18, 25, 30, 12, 24]; // sums to 159
+  const targetThisWeek = [9, 12, 8, 14, 11, 7, 12]; // sum 73
   for (let i = 0; i < 7; i++) {
     const idx = last7Start + i;
     days[idx].doors = targetThisWeek[i];
     days[idx].convos = Math.round(targetThisWeek[i] * 0.3);
-    days[idx].leads = Math.round(days[idx].convos * 0.35);
+    days[idx].leads = Math.max(1, Math.round(days[idx].convos * 0.4));
     days[idx].appts = Math.max(1, Math.round(days[idx].leads * 0.4));
     days[idx].wins = Math.round(days[idx].appts * 0.5);
   }
-  /* Prior 7 days — total ≈ 135 (so trend is +18%) */
-  const prevTotals = [18, 22, 14, 20, 24, 12, 25]; // sums to 135
+  const prevTotals = [8, 10, 7, 12, 9, 5, 11]; // sum 62
   for (let i = 0; i < 7; i++) {
     const idx = last7Start - 7 + i;
     days[idx].doors = prevTotals[i];
     days[idx].convos = Math.round(prevTotals[i] * 0.3);
-    days[idx].leads = Math.round(days[idx].convos * 0.35);
+    days[idx].leads = Math.max(1, Math.round(days[idx].convos * 0.4));
     days[idx].appts = Math.max(1, Math.round(days[idx].leads * 0.4));
     days[idx].wins = Math.round(days[idx].appts * 0.5);
+  }
+
+  /* Re-enforce streak boundary AFTER volume calibration: zero out the day
+     immediately before the 12-day window so the streak ends at exactly 12. */
+  const breakIdx = days.length - 1 - TARGET_CURRENT_STREAK;
+  if (breakIdx >= 0) {
+    days[breakIdx].doors = 0;
+    days[breakIdx].convos = 0;
+    days[breakIdx].leads = 0;
+    days[breakIdx].appts = 0;
+    days[breakIdx].wins = 0;
   }
 
   return days;
