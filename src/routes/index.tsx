@@ -187,7 +187,7 @@ function TodayPage() {
       {/* Quote shortcut */}
       <Link
         to="/quote"
-        className="press-brutal block w-full lg:max-w-md lg:mx-auto border-2 border-foreground bg-foreground text-background py-4 mt-4 text-center font-mono font-bold uppercase tracking-wider"
+        className="press-brutal block w-full border-2 border-foreground bg-foreground text-background py-4 mt-4 text-center font-mono font-bold uppercase tracking-wider"
       >
         <Plus className="inline size-5 mr-2 -mt-1" strokeWidth={3} />
         New Quote
