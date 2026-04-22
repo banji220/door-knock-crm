@@ -209,7 +209,10 @@ function MePage() {
           weeklyTarget={weeklyTarget}
           onTargetChange={setWeeklyTarget}
         />
-        <WeeklyInsights stats={statsMap} />
+        <WeeklyInsights
+          data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
+          weeklyTarget={weeklyTarget}
+        />
       </div>
 
       {/* ===== Contribution Heatmap ===== */}
