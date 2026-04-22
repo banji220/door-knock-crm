@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { formatNumber } from "@/lib/format";
 import {
   buildYearOfActivity,
@@ -13,13 +14,14 @@ import {
 
 /* =========================================================================
    ContributionHeatmap
-   - Mobile (<768): 90 days, 14×14 cells, gap 3
-   - Desktop:       1y by default, 18×18 cells, gap 4 (toggleable to 90d)
+   - Mobile  (<640):    90 days,  14×14 cells, gap 3
+   - Tablet  (640-1023): 180 days, ~16×16 cells, gap 3 — wide intermediate
+   - Desktop (>=1024):  1y default, 18×18 cells, gap 4 (toggleable)
    - 3+ day streak cells get a 2px ink ring
-   - Hover tooltip on desktop, tap-to-expand detail on mobile
+   - Hover tooltip on desktop, tap-to-expand detail on touch sizes
    ========================================================================= */
 
-type Range = "90d" | "1y";
+type Range = "90d" | "180d" | "1y";
 
 const METRICS: { key: Metric; label: string }[] = [
   { key: "doors", label: "Doors" },
@@ -30,6 +32,7 @@ const METRICS: { key: Metric; label: string }[] = [
 
 const RANGES: { key: Range; label: string; days: number }[] = [
   { key: "90d", label: "90d", days: 90 },
+  { key: "180d", label: "180d", days: 180 },
   { key: "1y", label: "1y", days: 365 },
 ];
 
@@ -107,18 +110,20 @@ export function ContributionHeatmap() {
   useEffect(() => setMounted(true), []);
 
   const isMobile = useIsMobile();
+  const breakpoint = useBreakpoint();
+  const isTablet = breakpoint === "tablet";
   const [metric, setMetric] = useState<Metric>("doors");
   const [range, setRange] = useState<Range>("90d");
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  /* Default range: 90d on mobile, 1y on desktop. Respects user override. */
+  /* Default range by breakpoint — mobile:90d, tablet:180d, desktop:1y. */
   const [rangeUserSet, setRangeUserSet] = useState(false);
   useEffect(() => {
     if (!mounted || rangeUserSet) return;
-    setRange(isMobile ? "90d" : "1y");
-  }, [mounted, isMobile, rangeUserSet]);
+    setRange(breakpoint === "mobile" ? "90d" : breakpoint === "tablet" ? "180d" : "1y");
+  }, [mounted, breakpoint, rangeUserSet]);
   const setRangeManual = (r: Range) => {
     setRangeUserSet(true);
     setRange(r);
@@ -150,12 +155,12 @@ export function ContributionHeatmap() {
     return { grid, cols, total, monthLabels: labels };
   }, [allDays, range, metric]);
 
-  const GAP = isMobile ? 3 : 4;
-  const dayColWidth = isMobile ? 24 : 28;
-  const LEGEND_CELL = isMobile ? 14 : 18;
+  const GAP = isMobile ? 3 : isTablet ? 3 : 4;
+  const dayColWidth = isMobile ? 24 : isTablet ? 26 : 28;
+  const LEGEND_CELL = isMobile ? 14 : isTablet ? 16 : 18;
 
   const totalLabel = `${metric} ${metric === "wins" ? "won" : "logged"} · last ${
-    range === "90d" ? "90 days" : "year"
+    range === "90d" ? "90 days" : range === "180d" ? "180 days" : "year"
   }`;
 
   const selectedCell = selectedDate
@@ -216,7 +221,7 @@ export function ContributionHeatmap() {
             );
           })}
         </div>
-        <div className="grid grid-cols-2 border-2 border-foreground shrink-0">
+        <div className="grid grid-cols-3 border-2 border-foreground shrink-0">
           {RANGES.map((r, i) => {
             const active = r.key === range;
             return (
