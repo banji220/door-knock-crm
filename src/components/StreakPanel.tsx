@@ -1,111 +1,126 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  buildYearOfActivity,
-  computeStreaks,
-} from "@/lib/activity-data";
+import { memo } from "react";
 
-/* =========================================================================
-   StreakPanel — current vs best streak, with status badge + progress bar
-   ========================================================================= */
-
-function statusFor(current: number) {
-  if (current === 0) return { label: "Cold", emoji: "❄️", tone: "muted" as const };
-  if (current <= 2) return { label: "Active", emoji: "✓", tone: "normal" as const };
-  if (current <= 4) return { label: "Warming Up", emoji: "⚡", tone: "normal" as const };
-  if (current <= 9) return { label: "Hot Streak", emoji: "🔥", tone: "hot" as const };
-  return { label: "On Fire", emoji: "🔥", tone: "hot" as const };
+interface StreakPanelProps {
+  currentStreak: number;
+  longestStreak: number;
 }
 
-function fillClass(tone: "muted" | "normal" | "hot") {
-  if (tone === "hot") return "heatmap-5";
-  if (tone === "normal") return "heatmap-3";
-  return "heatmap-1";
+type Tone = "hot" | "warm" | "cold";
+
+function getStreakStatus(current: number): {
+  label: string;
+  emoji: string;
+  tone: Tone;
+} {
+  if (current >= 10) return { label: "On fire", emoji: "🔥", tone: "hot" };
+  if (current >= 5) return { label: "Hot streak", emoji: "🔥", tone: "hot" };
+  if (current >= 3) return { label: "Warming up", emoji: "⚡", tone: "warm" };
+  if (current >= 1) return { label: "Active", emoji: "✓", tone: "warm" };
+  return { label: "Cold", emoji: "❄️", tone: "cold" };
 }
 
-export function StreakPanel() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+function fillVar(tone: Tone): string {
+  if (tone === "hot") return "var(--heatmap-5)";
+  if (tone === "warm") return "var(--heatmap-3)";
+  return "var(--heatmap-1)";
+}
 
-  const { current, best } = useMemo(() => {
-    const days = buildYearOfActivity();
-    return computeStreaks(days);
-  }, []);
+function StreakPanelImpl({ currentStreak, longestStreak }: StreakPanelProps) {
+  const status = getStreakStatus(currentStreak);
+  const pct =
+    longestStreak > 0
+      ? Math.min(Math.round((currentStreak / longestStreak) * 100), 100)
+      : 0;
 
-  const status = statusFor(current);
-  const pct = best > 0 ? Math.min(1, current / best) : 0;
-  const pctLabel = Math.round(pct * 100);
+  const pillBase =
+    "px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider border-2";
+  const pillTone =
+    status.tone === "hot"
+      ? "border-foreground bg-foreground text-background"
+      : status.tone === "warm"
+        ? "border-foreground bg-transparent text-foreground"
+        : "border-muted-foreground bg-transparent text-muted-foreground";
+
   const isHot = status.tone === "hot";
 
-  const badgeClass =
-    status.tone === "hot"
-      ? "bg-foreground text-background border-2 border-foreground"
-      : status.tone === "muted"
-        ? "bg-card text-muted-foreground border-2 border-muted-foreground/40"
-        : "bg-card text-foreground border-2 border-foreground";
-
-  if (!mounted) {
-    return (
-      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
-        <div className="h-[180px]" aria-hidden />
-      </section>
-    );
-  }
-
   return (
-    <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold uppercase tracking-tight">Streak</h2>
-        <span
-          className={`px-2 py-0.5 font-mono font-bold text-[10px] uppercase tracking-wider ${badgeClass}`}
-        >
-          <span aria-hidden className="mr-1">{status.emoji}</span>
+    <div className="border-2 border-foreground bg-card px-4 py-4 sm:px-5 sm:py-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <h2 className="text-base sm:text-lg font-bold tracking-tight uppercase">
+          Streak
+        </h2>
+        <span className={`${pillBase} ${pillTone}`}>
+          <span aria-hidden="true" className="mr-1">
+            {status.emoji}
+          </span>
           {status.label}
         </span>
       </div>
 
+      {/* Stat tiles */}
       <div className="grid grid-cols-2 gap-2">
+        {/* Current */}
         <div
-          className={`border-2 border-foreground p-3 ${
-            isHot ? "bg-foreground text-background" : "bg-card"
+          className={`px-4 py-4 ${
+            isHot ? "bg-foreground text-background" : "bg-muted"
           }`}
         >
-          <div className="text-3xl font-bold font-mono tabular-nums leading-none">
-            {current}
-          </div>
           <div
-            className={`mt-2 text-[10px] font-mono font-bold uppercase tracking-wider ${
-              isHot ? "text-background/70" : "text-muted-foreground"
+            className={`text-[10px] font-mono font-bold uppercase tracking-wider ${
+              isHot ? "opacity-70" : "text-muted-foreground"
             }`}
           >
-            Current days
+            Current
+          </div>
+          <div className="mt-1 text-3xl sm:text-4xl font-mono font-bold tabular-nums leading-none">
+            {currentStreak}
+          </div>
+          <div
+            className={`mt-1 text-[10px] font-mono font-bold uppercase tracking-wider ${
+              isHot ? "opacity-70" : "text-muted-foreground"
+            }`}
+          >
+            days
           </div>
         </div>
-        <div className="border-2 border-foreground bg-muted p-3">
-          <div className="text-3xl font-bold font-mono tabular-nums leading-none">
-            {best}
+
+        {/* Best */}
+        <div className="bg-muted px-4 py-4">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
+            Best
           </div>
-          <div className="mt-2 text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
-            Best days
+          <div className="mt-1 text-3xl sm:text-4xl font-mono font-bold tabular-nums leading-none">
+            {longestStreak}
+          </div>
+          <div className="mt-1 text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
+            days
           </div>
         </div>
       </div>
 
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-            Progress to Best
-          </span>
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider tabular-nums">
-            {pctLabel}%
-          </span>
+      {/* Progress to best */}
+      <div className="mt-3">
+        <div className="flex justify-between text-[10px] font-mono text-muted-foreground uppercase tracking-wider mb-1">
+          <span>Progress to best</span>
+          <span className="tabular-nums font-bold">{pct}%</span>
         </div>
-        <div className="relative w-full h-2 border-2 border-foreground bg-muted overflow-hidden">
+        <div
+          className="relative w-full h-2 bg-muted overflow-hidden"
+          role="progressbar"
+          aria-valuenow={pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
           <div
-            className={`h-full ${fillClass(status.tone)} transition-[width] duration-300`}
-            style={{ width: `${pct * 100}%` }}
+            className="h-full transition-[width] duration-300 ease-out"
+            style={{ width: `${pct}%`, backgroundColor: fillVar(status.tone) }}
           />
         </div>
       </div>
-    </section>
+    </div>
   );
 }
+
+export const StreakPanel = memo(StreakPanelImpl);
+export default StreakPanel;
