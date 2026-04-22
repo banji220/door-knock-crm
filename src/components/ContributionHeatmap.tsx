@@ -155,12 +155,12 @@ export function ContributionHeatmap() {
     return { grid, cols, total, monthLabels: labels };
   }, [allDays, range, metric]);
 
-  const GAP = isMobile ? 3 : 4;
-  const dayColWidth = isMobile ? 24 : 28;
-  const LEGEND_CELL = isMobile ? 14 : 18;
+  const GAP = isMobile ? 3 : isTablet ? 3 : 4;
+  const dayColWidth = isMobile ? 24 : isTablet ? 26 : 28;
+  const LEGEND_CELL = isMobile ? 14 : isTablet ? 16 : 18;
 
   const totalLabel = `${metric} ${metric === "wins" ? "won" : "logged"} · last ${
-    range === "90d" ? "90 days" : "year"
+    range === "90d" ? "90 days" : range === "180d" ? "180 days" : "year"
   }`;
 
   const selectedCell = selectedDate
@@ -221,7 +221,7 @@ export function ContributionHeatmap() {
             );
           })}
         </div>
-        <div className="grid grid-cols-2 border-2 border-foreground shrink-0">
+        <div className="grid grid-cols-3 border-2 border-foreground shrink-0">
           {RANGES.map((r, i) => {
             const active = r.key === range;
             return (
