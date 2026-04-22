@@ -4,6 +4,7 @@ import { AppShell, PageHeader } from "@/components/AppShell";
 import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 import { StreakPanel } from "@/components/StreakPanel";
 import { MomentumMeter } from "@/components/MomentumMeter";
+import { BadgesPanel } from "@/components/BadgesPanel";
 
 export const Route = createFileRoute("/me")({
   component: MePage,
