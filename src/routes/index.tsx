@@ -128,7 +128,13 @@ function TodayPage() {
       />
 
       {/* Daily mission tracker */}
-      <DailyMission current={knocks.length} goal={DAILY_GOAL} />
+      <DailyMission
+        todayDoors={knocks.length}
+        target={DAILY_GOAL}
+        onTargetChange={() => {
+          /* Target editing lives on /me; this is a read-only view here. */
+        }}
+      />
 
       {/* APPOINTMENTS TODAY */}
       <ActionSection label="Appointments Today" count={appointmentsToday.length}>
