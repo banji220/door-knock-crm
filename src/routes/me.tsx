@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 import { StreakPanel } from "@/components/StreakPanel";
 import { MomentumMeter } from "@/components/MomentumMeter";
 import { BadgesPanel } from "@/components/BadgesPanel";
+import { DailyMission } from "@/components/DailyMission";
+import { WeeklyGoal } from "@/components/WeeklyGoal";
+import { WeeklyInsights } from "@/components/WeeklyInsights";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { buildYearOfActivity } from "@/lib/activity-data";
+import { type DayStats, isoDate } from "@/lib/day-stats";
 
 export const Route = createFileRoute("/me")({
   component: MePage,
@@ -23,16 +29,42 @@ function MePage() {
   const [flashed, setFlashed] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  /* Daily mission */
-  const [target, setTarget] = useState(30);
-  const [editingTarget, setEditingTarget] = useState(false);
-  const [targetDraft, setTargetDraft] = useState("30");
+  /* Persisted targets */
+  const [dailyTarget, setDailyTarget] = useLocalStorage<number>(
+    "giraffe.dailyTarget",
+    30,
+  );
+  const [weeklyTarget, setWeeklyTarget] = useLocalStorage<number>(
+    "giraffe.weeklyTarget",
+    150,
+  );
 
-  /* Hour state — client-only to avoid SSR hydration mismatch */
-  const [hour, setHour] = useState<number | null>(null);
-  useEffect(() => {
-    setHour(new Date().getHours());
-  }, []);
+  /* ----- Build the stats map from the same seeded year used by the heatmap.
+     Override TODAY's row with the live `logged` count so the Daily Mission and
+     7-day chart stay in sync with the Quick Log buttons. ----- */
+  const statsMap = useMemo<Record<string, DayStats>>(() => {
+    const days = buildYearOfActivity();
+    const map: Record<string, DayStats> = {};
+    for (const d of days) {
+      map[isoDate(d.date)] = {
+        doors: d.doors,
+        convos: d.convos,
+        leads: d.leads,
+        appts: d.appts,
+        wins: d.wins,
+      };
+    }
+    const todayKey = isoDate(new Date());
+    const base = map[todayKey] ?? {
+      doors: 0,
+      convos: 0,
+      leads: 0,
+      appts: 0,
+      wins: 0,
+    };
+    map[todayKey] = { ...base, doors: logged };
+    return map;
+  }, [logged]);
 
   const closeRate =
     STATS.quotes > 0 ? Math.round((STATS.closes / STATS.quotes) * 100) : 0;
@@ -53,57 +85,10 @@ function MePage() {
     window.setTimeout(() => setFeedback(null), 600);
   };
 
-  /* Mission progress */
-  const pct = target > 0 ? logged / target : 0;
-  const pctClamp = Math.min(1, pct);
-  const complete = logged >= target;
-  const stretch = pct > 1.5;
-
-  const status = logged === 0
-    ? "Not Started"
-    : complete
-      ? "Mission Complete"
-      : "In Progress";
-
-  const statusEmoji = logged === 0 ? "🎯" : complete ? "🏆" : "🔥";
-
-  const heatClass =
-    pct >= 1
-      ? "heatmap-5"
-      : pct > 0.6
-        ? "heatmap-4"
-        : pct > 0.3
-          ? "heatmap-3"
-          : "heatmap-2";
-
-  /* Smart suggestion — depends on client-side hour, render placeholder until hydrated */
-  let suggestion = "Loading pace...";
-  if (hour !== null) {
-    const remaining = target - logged;
-    if (stretch) {
-      suggestion = "Beast mode. You've blown past the goal.";
-    } else if (complete) {
-      suggestion = "Mission complete. Anything extra is bonus.";
-    } else if (remaining > 0 && remaining <= 5) {
-      suggestion = `Just ${remaining} more. You're right there.`;
-    } else if (logged === 0 && hour < 14) {
-      suggestion = "Clock's ticking. First knock sets the tone.";
-    } else if (logged === 0) {
-      suggestion = "Day's slipping — start now, finish strong.";
-    } else if (pct > 0.7) {
-      suggestion = "You're on track for a strong day.";
-    } else if (pct >= 0.4) {
-      suggestion = "Solid pace. Keep the momentum going.";
-    } else {
-      suggestion = "Good start. Stay consistent and stack the numbers.";
-    }
-  }
-
-  const commitTarget = () => {
-    const n = parseInt(targetDraft, 10);
-    if (!Number.isNaN(n) && n > 0) setTarget(n);
-    setEditingTarget(false);
-  };
+  /* Hour state — kept for any future client-only logic (no SSR mismatch) */
+  useEffect(() => {
+    /* placeholder for future client-only effects */
+  }, []);
 
   return (
     <AppShell
@@ -212,112 +197,20 @@ function MePage() {
         </div>
       </section>
 
-      {/* ===== Daily Mission ===== */}
-      <section className="mb-8">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            <span aria-hidden className="mr-1">{statusEmoji}</span>
-            Daily Mission
-          </span>
-          <span
-            className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 border-2 border-foreground ${
-              complete
-                ? "bg-[var(--success)] text-[var(--success-foreground)]"
-                : logged === 0
-                  ? "bg-card text-muted-foreground"
-                  : "bg-[var(--amber)] text-foreground"
-            }`}
-          >
-            {status}
-          </span>
-        </div>
-
-        <div className="border-2 border-foreground bg-card p-3">
-          {/* Progress bar — ink fill on cream track, stamped numerals */}
-          <div
-            className="relative h-7 w-full heatmap-0 border-2 border-foreground overflow-hidden"
-            role="progressbar"
-            aria-valuenow={logged}
-            aria-valuemin={0}
-            aria-valuemax={target}
-          >
-            {/* Filled portion — heats up with progress */}
-            <div
-              className={`absolute inset-y-0 left-0 ${heatClass} transition-[width] duration-300`}
-              style={{ width: `${pctClamp * 100}%` }}
-            />
-            {/* Base label — ink on warm track */}
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums text-foreground">
-              {logged} / {target} doors
-            </div>
-            {/* Same label clipped to the filled side. At 100% the fill is dark
-                chocolate, so swap to cream; otherwise keep ink for contrast. */}
-            <div
-              className="absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-300"
-              style={{ width: `${pctClamp * 100}%` }}
-              aria-hidden
-            >
-              <div
-                className={`absolute inset-y-0 left-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums ${
-                  pctClamp >= 1 ? "text-background" : "text-foreground"
-                }`}
-                style={{ width: `${100 / Math.max(pctClamp, 0.0001)}%` }}
-              >
-                {logged} / {target} doors
-              </div>
-            </div>
-          </div>
-
-          {/* Editable target */}
-          <div className="mt-3 flex items-center justify-between">
-            {editingTarget ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  value={targetDraft}
-                  onChange={(e) => setTargetDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") commitTarget();
-                    if (e.key === "Escape") setEditingTarget(false);
-                  }}
-                  autoFocus
-                  className="w-20 border-2 border-foreground bg-background font-mono font-bold text-sm px-2 py-1 focus:outline-none focus:bg-[var(--accent)]"
-                />
-                <button
-                  type="button"
-                  onClick={commitTarget}
-                  className="press-brutal border-2 border-foreground bg-foreground text-background font-mono font-bold text-[11px] uppercase tracking-wider px-3 py-1 active:translate-y-[2px]"
-                >
-                  Save
-                </button>
-              </div>
-            ) : (
-              <span className="text-xs font-mono text-muted-foreground">
-                Target:{" "}
-                <span className="font-bold text-foreground">{target}</span>{" "}
-                doors
-              </span>
-            )}
-            {!editingTarget && (
-              <button
-                type="button"
-                onClick={() => {
-                  setTargetDraft(String(target));
-                  setEditingTarget(true);
-                }}
-                className="press-brutal border-2 border-foreground bg-card font-mono font-bold text-[11px] uppercase tracking-wider px-3 py-1 active:translate-y-[2px]"
-              >
-                Edit
-              </button>
-            )}
-          </div>
-
-          <p className="mt-3 text-sm font-mono text-muted-foreground leading-snug">
-            {suggestion}
-          </p>
-        </div>
-      </section>
+      {/* ===== Goals + insights stack ===== */}
+      <div className="flex flex-col gap-4 mb-8">
+        <DailyMission
+          todayDoors={logged}
+          target={dailyTarget}
+          onTargetChange={setDailyTarget}
+        />
+        <WeeklyGoal
+          stats={statsMap}
+          target={weeklyTarget}
+          onTargetChange={setWeeklyTarget}
+        />
+        <WeeklyInsights stats={statsMap} />
+      </div>
 
       {/* ===== Contribution Heatmap ===== */}
       <ContributionHeatmap />
