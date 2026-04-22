@@ -241,24 +241,26 @@ function MePage() {
             aria-valuemin={0}
             aria-valuemax={target}
           >
-            {/* Filled portion */}
+            {/* Filled portion — heats up with progress */}
             <div
-              className="absolute inset-y-0 left-0 bg-foreground transition-[width] duration-300"
+              className={`absolute inset-y-0 left-0 ${heatClass} transition-[width] duration-300`}
               style={{ width: `${pctClamp * 100}%` }}
             />
-            {/* Base label — ink on cream track */}
+            {/* Base label — ink on warm track */}
             <div className="absolute inset-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums text-foreground">
               {logged} / {target} doors
             </div>
-            {/* Same label clipped to the filled side — cream on ink.
-                Inner label spans the full track width so centering matches. */}
+            {/* Same label clipped to the filled side. At 100% the fill is dark
+                chocolate, so swap to cream; otherwise keep ink for contrast. */}
             <div
               className="absolute inset-y-0 left-0 overflow-hidden transition-[width] duration-300"
               style={{ width: `${pctClamp * 100}%` }}
               aria-hidden
             >
               <div
-                className="absolute inset-y-0 left-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums text-background"
+                className={`absolute inset-y-0 left-0 flex items-center justify-center text-sm font-mono font-bold tabular-nums ${
+                  pctClamp >= 1 ? "text-background" : "text-foreground"
+                }`}
                 style={{ width: `${100 / Math.max(pctClamp, 0.0001)}%` }}
               >
                 {logged} / {target} doors
