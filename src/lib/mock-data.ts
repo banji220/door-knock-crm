@@ -114,6 +114,52 @@ export const mockFollowUps: FollowUp[] = [
   { id: "f4", leadName: "No 33 Elm", address: "33 Elm Road", reason: "Re-knock — was out", dueDate: iso(addDays(-3)), priority: "low" },
 ];
 
+/* CUSTOMERS — won leads with job history */
+export type Customer = {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  ltv: number;             // lifetime value £
+  jobsDone: number;
+  lastJobAt: string;       // ISO
+  recleanDueAt: string;    // ISO — when next clean is due
+  reviewAsked: boolean;
+};
+
+export const mockCustomers: Customer[] = [
+  {
+    id: "c1", name: "Sarah Mendez", address: "12 Oak Street", phone: "07700 900123",
+    ltv: 420, jobsDone: 12, lastJobAt: iso(addDays(-28)),
+    recleanDueAt: iso(addDays(2)), reviewAsked: false,
+  },
+  {
+    id: "c2", name: "Mike Reilly", address: "8 Pine Avenue", phone: "07700 900345",
+    ltv: 600, jobsDone: 12, lastJobAt: iso(addDays(-30)),
+    recleanDueAt: iso(addDays(0)), reviewAsked: false,
+  },
+  {
+    id: "c3", name: "Linda Khan", address: "21 Maple Close", phone: "07700 900567",
+    ltv: 320, jobsDone: 8, lastJobAt: iso(addDays(-45)),
+    recleanDueAt: iso(addDays(-3)), reviewAsked: true,
+  },
+  {
+    id: "c4", name: "Tom Webb", address: "5 Cedar Drive", phone: "07700 900678",
+    ltv: 540, jobsDone: 12, lastJobAt: iso(addDays(-14)),
+    recleanDueAt: iso(addDays(16)), reviewAsked: true,
+  },
+  {
+    id: "c5", name: "Helen Park", address: "9 Maple Drive",
+    ltv: 165, jobsDone: 3, lastJobAt: iso(addDays(-20)),
+    recleanDueAt: iso(addDays(40)), reviewAsked: false,
+  },
+  {
+    id: "c6", name: "James O'Connor", address: "44 Birch Lane", phone: "07700 900889",
+    ltv: 1200, jobsDone: 24, lastJobAt: iso(addDays(-10)),
+    recleanDueAt: iso(addDays(20)), reviewAsked: true,
+  },
+];
+
 export const todayStats = {
   knocks: mockKnocks.length,
   quoted: mockKnocks.filter((k) => k.outcome === "quoted" || k.outcome === "booked").length,
