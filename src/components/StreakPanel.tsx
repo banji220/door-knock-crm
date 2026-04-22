@@ -23,6 +23,9 @@ function fillClass(tone: "muted" | "normal" | "hot") {
 }
 
 export function StreakPanel() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const { current, best } = useMemo(() => {
     const days = buildYearOfActivity();
     return computeStreaks(days);

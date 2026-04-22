@@ -19,6 +19,9 @@ function statusFor(score: number) {
 }
 
 export function MomentumMeter() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const { score, trendPct, last7 } = useMemo(() => {
     const days = buildYearOfActivity();
     return computeMomentum(days);
