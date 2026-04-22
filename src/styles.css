@@ -247,15 +247,15 @@
     box-shadow: none;
   }
 
-  /* Press feedback — flat translation, no shadow play */
+  /* Press feedback — buttons press DOWN on tap (vertical only) */
   .press-brutal {
     transition: transform 0.05s ease, background-color 0.1s ease;
   }
   .press-brutal:active {
-    transform: translate(2px, 2px);
+    transform: translateY(2px);
   }
   .press-brutal-lg:active {
-    transform: translate(3px, 3px);
+    transform: translateY(3px);
   }
 
   .font-display {
