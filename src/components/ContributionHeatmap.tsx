@@ -113,10 +113,11 @@ export function ContributionHeatmap() {
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  /* When desktop is detected post-mount, default range to 1y (user can flip). */
+  /* Default range: 90d on mobile, 1y on desktop. Respects user override. */
   const [rangeUserSet, setRangeUserSet] = useState(false);
   useEffect(() => {
-    if (mounted && !isMobile && !rangeUserSet) setRange("1y");
+    if (!mounted || rangeUserSet) return;
+    setRange(isMobile ? "90d" : "1y");
   }, [mounted, isMobile, rangeUserSet]);
   const setRangeManual = (r: Range) => {
     setRangeUserSet(true);
