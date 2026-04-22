@@ -36,7 +36,13 @@ function fmtDueLabel(iso: string): { label: string; overdue: boolean } {
 }
 
 function fmtTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  // Use UTC to keep SSR and client output identical (avoids hydration mismatch).
+  const d = new Date(iso);
+  const h = d.getUTCHours();
+  const m = d.getUTCMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${m.toString().padStart(2, "0")} ${ampm}`;
 }
 
 function TodayPage() {
