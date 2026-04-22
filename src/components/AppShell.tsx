@@ -131,7 +131,8 @@ export function AppShell({
 }
 
 /* ---------------- Desktop field layout ----------------
-   Sidebar (256) | Panel (420) | Map (rest, persistent) */
+   Map = full-bleed base layer (edge-to-edge, always visible).
+   Sidebar (64) and Panel (420) float ON TOP as overlays. */
 function DesktopFieldLayout({
   renderHeader,
   children,
@@ -139,13 +140,14 @@ function DesktopFieldLayout({
   renderHeader: (forPanel?: boolean) => ReactNode;
   children: ReactNode;
 }) {
-  const leftInset = SIDEBAR_W + PANEL_W;
   return (
     <div className="hidden lg:block">
-      {/* Persistent map fills the area to the right of sidebar+panel */}
-      <PersistentMap leftInset={leftInset} />
+      {/* Map is full-screen behind everything — leftInset=0 so it spans
+          edge to edge. Sidebar + panel float on top with their own z-index. */}
+      <PersistentMap leftInset={0} />
 
-      {/* Floating left-anchored drawer panel */}
+      {/* Floating drawer panel — sits on top of the map, anchored to the
+          right edge of the sidebar. */}
       <aside
         className="fixed top-0 bottom-0 z-30 flex flex-col bg-background border-r-2 border-foreground shadow-[6px_0_0_0_color-mix(in_oklab,var(--foreground)_15%,transparent)]"
         style={{ left: `${SIDEBAR_W}px`, width: `${PANEL_W}px` }}
