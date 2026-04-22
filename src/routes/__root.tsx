@@ -5,18 +5,20 @@ import appCss from "../styles.css?url";
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+      <div className="max-w-md w-full border-brutal-thick bg-card p-6 text-center">
+        <div className="inline-block border-brutal-thick bg-ink text-cream px-3 py-1 text-xs font-mono uppercase tracking-wider mb-4">
+          404
+        </div>
+        <h1 className="text-4xl font-display uppercase">No such door</h1>
+        <p className="mt-2 text-sm font-mono text-muted-foreground">
+          That page doesn't exist or has moved.
         </p>
         <div className="mt-6">
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="press-brutal inline-block border-brutal-thick bg-amber px-6 py-3 text-sm font-display uppercase text-ink"
           >
-            Go home
+            Back to knock
           </Link>
         </div>
       </div>
