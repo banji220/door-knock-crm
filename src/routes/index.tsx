@@ -14,7 +14,6 @@ export const Route = createFileRoute("/")({
   component: TodayPage,
 });
 
-const DAILY_GOAL = 30;
 const MS_PER_DAY = 86_400_000;
 
 function isToday(iso: string): boolean {
