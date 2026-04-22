@@ -159,6 +159,8 @@ export const mockCustomers: Customer[] = [
     recleanDueAt: iso(addDays(20)), reviewAsked: true,
   },
 ];
+
+export const todayStats = {
   knocks: mockKnocks.length,
   quoted: mockKnocks.filter((k) => k.outcome === "quoted" || k.outcome === "booked").length,
   booked: mockKnocks.filter((k) => k.outcome === "booked").length,
