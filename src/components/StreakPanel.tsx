@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildYearOfActivity,
   computeStreaks,
@@ -23,6 +23,9 @@ function fillClass(tone: "muted" | "normal" | "hot") {
 }
 
 export function StreakPanel() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const { current, best } = useMemo(() => {
     const days = buildYearOfActivity();
     return computeStreaks(days);
@@ -39,6 +42,14 @@ export function StreakPanel() {
       : status.tone === "muted"
         ? "bg-card text-muted-foreground border-2 border-muted-foreground/40"
         : "bg-card text-foreground border-2 border-foreground";
+
+  if (!mounted) {
+    return (
+      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
+        <div className="h-[180px]" aria-hidden />
+      </section>
+    );
+  }
 
   return (
     <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">

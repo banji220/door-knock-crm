@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatNumber } from "@/lib/format";
 import {
   buildYearOfActivity,
   colorStep,
@@ -100,13 +101,27 @@ function formatDate(d: Date) {
 }
 
 export function ContributionHeatmap() {
+  /* Defer all date/viewport-derived rendering until after mount to avoid
+     SSR↔client hydration mismatches. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const isMobile = useIsMobile();
   const [metric, setMetric] = useState<Metric>("doors");
-  /* Mobile defaults to 90d; user can still flip to 1y */
-  const [range, setRange] = useState<Range>(isMobile ? "90d" : "1y");
+  const [range, setRange] = useState<Range>("1y");
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  /* When mobile is detected post-mount, default range to 90d (user can flip). */
+  const [rangeUserSet, setRangeUserSet] = useState(false);
+  useEffect(() => {
+    if (mounted && isMobile && !rangeUserSet) setRange("90d");
+  }, [mounted, isMobile, rangeUserSet]);
+  const setRangeManual = (r: Range) => {
+    setRangeUserSet(true);
+    setRange(r);
+  };
 
   const allDays = useMemo(() => buildYearOfActivity(), []);
   const { current: currentStreak, best: bestStreak } = useMemo(
@@ -146,13 +161,22 @@ export function ContributionHeatmap() {
     ? grid.flat().find((c) => c.date.toISOString() === selectedDate) ?? null
     : null;
 
+  /* SSR-safe placeholder — same shell, no date-derived content */
+  if (!mounted) {
+    return (
+      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6 relative">
+        <div className="h-[420px]" aria-hidden />
+      </section>
+    );
+  }
+
   return (
     <section className="border-2 border-foreground bg-card px-4 py-4 mb-6 relative">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
           <div className="text-3xl font-bold font-mono tabular-nums leading-none">
-            {total.toLocaleString()}
+            {formatNumber(total)}
           </div>
           <div className="mt-1.5 text-xs font-mono text-muted-foreground uppercase tracking-wider">
             {totalLabel}
@@ -198,7 +222,7 @@ export function ContributionHeatmap() {
               <button
                 key={r.key}
                 type="button"
-                onClick={() => setRange(r.key)}
+                onClick={() => setRangeManual(r.key)}
                 className={`press-brutal px-2.5 py-2 text-[10px] font-mono font-bold uppercase tracking-wider active:translate-y-[2px] ${
                   i > 0 ? "border-l-2 border-foreground" : ""
                 } ${active ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}

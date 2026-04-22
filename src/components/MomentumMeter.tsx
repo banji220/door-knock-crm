@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   buildYearOfActivity,
   computeMomentum,
@@ -19,6 +19,9 @@ function statusFor(score: number) {
 }
 
 export function MomentumMeter() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   const { score, trendPct, last7 } = useMemo(() => {
     const days = buildYearOfActivity();
     return computeMomentum(days);
@@ -50,6 +53,14 @@ export function MomentumMeter() {
   const dayLabels = last7.map((d, i) =>
     i === last7.length - 1 ? "Today" : DOW_LETTERS[d.date.getDay()],
   );
+
+  if (!mounted) {
+    return (
+      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">
+        <div className="h-[260px]" aria-hidden />
+      </section>
+    );
+  }
 
   return (
     <section className="border-2 border-foreground bg-card px-4 py-4 mb-6">

@@ -284,4 +284,31 @@
   .heatmap-3 { background-color: var(--heatmap-3); }
   .heatmap-4 { background-color: var(--heatmap-4); }
   .heatmap-5 { background-color: var(--heatmap-5); }
+
+  /* ----- Achievement / toast animations ----- */
+  @keyframes achievement-pop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  .animate-achievement-pop {
+    animation: achievement-pop 300ms ease-out;
+  }
+
+  @keyframes badge-bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+  }
+  .badge-bounce {
+    display: inline-block;
+    animation: badge-bounce 700ms ease-in-out infinite;
+  }
+
+  @keyframes toast-slide-in {
+    from { transform: translate(-50%, -120%); opacity: 0; }
+    to   { transform: translate(-50%, 0);     opacity: 1; }
+  }
+  .toast-slide-in {
+    animation: toast-slide-in 220ms ease-out;
+  }
 }
