@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell } from "@/components/AppShell";
+import { Card, Badge, SectionHeader } from "@/components/ui-brutal";
 import { mockFollowUps, type FollowUp } from "@/lib/mock-data";
 import { Phone, MessageSquare, Check, Clock } from "lucide-react";
 
@@ -20,10 +21,10 @@ function relTime(iso: string) {
   return `In ${diff}d`;
 }
 
-const priorityCfg: Record<FollowUp["priority"], string> = {
-  high: "bg-destructive text-destructive-foreground",
-  med: "bg-amber text-ink",
-  low: "bg-card text-ink",
+const priorityVariant: Record<FollowUp["priority"], "destructive" | "accent" | "default"> = {
+  high: "destructive",
+  med: "accent",
+  low: "default",
 };
 
 function FollowUpsPage() {
@@ -38,71 +39,58 @@ function FollowUpsPage() {
   const todayCount = items.filter((i) => relTime(i.dueDate) === "Today").length;
 
   return (
-    <AppShell
-      title="Chase"
-      subtitle={`${overdue} overdue · ${todayCount} today`}
-    >
+    <AppShell title="Chase" subtitle={`${overdue} overdue · ${todayCount} today`}>
+      <SectionHeader count={items.length}>Queue</SectionHeader>
       <ul className="space-y-3">
         {items.map((f) => {
           const rel = relTime(f.dueDate);
           const isOverdue = rel.includes("overdue");
           return (
-            <li
-              key={f.id}
-              className={`border-brutal-thick bg-card p-4 ${
-                isOverdue ? "bg-destructive/10" : ""
-              }`}
-            >
+            <Card as="li" key={f.id} className={`p-4 ${isOverdue ? "bg-[var(--destructive)]/10" : ""}`}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="min-w-0">
-                  <h3 className="font-display uppercase text-lg leading-tight">
+                  <h3 className="font-mono font-bold uppercase text-base leading-tight">
                     {f.leadName}
                   </h3>
                   <p className="text-xs font-mono text-muted-foreground mt-0.5">
                     {f.address}
                   </p>
                 </div>
-                <span
-                  className={`text-[10px] font-display uppercase px-2 py-0.5 border-2 border-ink shrink-0 ${priorityCfg[f.priority]}`}
-                >
-                  {f.priority}
-                </span>
+                <Badge variant={priorityVariant[f.priority]}>{f.priority}</Badge>
               </div>
               <p className="text-sm font-mono mb-3">{f.reason}</p>
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 ${
-                    isOverdue ? "text-destructive font-bold" : "text-muted-foreground"
+                  className={`text-[10px] font-mono font-bold uppercase tracking-[0.2em] flex items-center gap-1 ${
+                    isOverdue ? "text-destructive" : "text-muted-foreground"
                   }`}
                 >
                   <Clock className="size-3" />
                   {rel}
                 </span>
                 <div className="flex gap-2">
-                  <button className="size-10 border-2 border-ink bg-cream press-brutal flex items-center justify-center">
+                  <button className="press-brutal size-10 border-2 border-foreground bg-background flex items-center justify-center">
                     <MessageSquare className="size-4" strokeWidth={2.5} />
                   </button>
-                  <button className="size-10 border-2 border-ink bg-amber press-brutal flex items-center justify-center">
+                  <button className="press-brutal size-10 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center">
                     <Phone className="size-4" strokeWidth={2.5} />
                   </button>
                   <button
                     onClick={() => dismiss(f.id)}
-                    className="size-10 border-2 border-ink bg-success text-success-foreground press-brutal flex items-center justify-center"
+                    className="press-brutal size-10 border-2 border-foreground bg-[var(--success)] text-[var(--success-foreground)] flex items-center justify-center"
                   >
                     <Check className="size-4" strokeWidth={3} />
                   </button>
                 </div>
               </div>
-            </li>
+            </Card>
           );
         })}
         {items.length === 0 && (
-          <li className="border-brutal-thick border-dashed bg-card p-8 text-center">
-            <p className="font-display uppercase text-lg">All clear</p>
-            <p className="text-sm font-mono text-muted-foreground mt-1">
-              Nobody to chase. Go knock.
-            </p>
-          </li>
+          <Card as="li" className="border-dashed p-8 text-center">
+            <p className="font-mono font-bold uppercase text-base">All clear</p>
+            <p className="text-sm font-mono text-muted-foreground mt-1">Nobody to chase. Go knock.</p>
+          </Card>
         )}
       </ul>
     </AppShell>
