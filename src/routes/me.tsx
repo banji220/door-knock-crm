@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 import { StreakPanel } from "@/components/StreakPanel";
 import { MomentumMeter } from "@/components/MomentumMeter";
 import { BadgesPanel } from "@/components/BadgesPanel";
-import { DailyMission } from "@/components/DailyMission";
 import { WeeklyGoal } from "@/components/WeeklyGoal";
 import { WeeklyInsights } from "@/components/WeeklyInsights";
 import { useLocalStorage } from "@/hooks/use-local-storage";
@@ -24,24 +23,15 @@ const STATS = {
 };
 
 function MePage() {
-  /* Quick log — local count seeded from mock knocks */
-  const [logged, setLogged] = useState(STATS.knocks);
-  const [flashed, setFlashed] = useState<number | null>(null);
-  const [feedback, setFeedback] = useState<string | null>(null);
-
-  /* Persisted targets */
-  const [dailyTarget, setDailyTarget] = useLocalStorage<number>(
-    "giraffe.dailyTarget",
-    30,
-  );
+  /* Persisted weekly target */
   const [weeklyTarget, setWeeklyTarget] = useLocalStorage<number>(
     "giraffe.weeklyTarget",
     150,
   );
 
   /* ----- Build the stats map from the same seeded year used by the heatmap.
-     Override TODAY's row with the live `logged` count so the Daily Mission and
-     7-day chart stay in sync with the Quick Log buttons. ----- */
+     Override TODAY's row with STATS.knocks so the 7-day chart reflects the
+     current day's mocked count. ----- */
   const statsMap = useMemo<Record<string, DayStats>>(() => {
     const days = buildYearOfActivity();
     const map: Record<string, DayStats> = {};
@@ -62,9 +52,9 @@ function MePage() {
       appts: 0,
       wins: 0,
     };
-    map[todayKey] = { ...base, doors: logged };
+    map[todayKey] = { ...base, doors: STATS.knocks };
     return map;
-  }, [logged]);
+  }, []);
 
   const streaks = useMemo(() => computeStreaks(buildYearOfActivity()), []);
 
@@ -77,20 +67,6 @@ function MePage() {
     { label: "Closes", value: STATS.closes, accent: false },
     { label: "Close Rate", value: `${closeRate}%`, accent: true },
   ];
-
-  const handleLog = (n: number) => {
-    setLogged((c) => c + n);
-    setFlashed(n);
-    setFeedback(`Logged ${n} door${n === 1 ? "" : "s"}`);
-    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(15);
-    window.setTimeout(() => setFlashed(null), 600);
-    window.setTimeout(() => setFeedback(null), 600);
-  };
-
-  /* Hour state — kept for any future client-only logic (no SSR mismatch) */
-  useEffect(() => {
-    /* placeholder for future client-only effects */
-  }, []);
 
   return (
     <AppShell
