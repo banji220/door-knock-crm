@@ -2,20 +2,12 @@ import { ButtonHTMLAttributes, forwardRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /* =========================================================================
-   Brutalist Warm — Component primitives.
-
-   Two visual tiers, used intentionally:
-
-   1. PRIMARY  — heavy 2px ink border. Heroes, top-level CTAs, dashboard
-      anchors. Use sparingly: typically ONE primary block per screen zone.
-   2. SECONDARY — hairline border, raised surface. Lists, grouped rows,
-      supporting cards. Quiet container; content does the talking.
-
-   Use accent stripes (`stripe-destructive`, `stripe-warning`, etc.) to
-   signal urgency on individual rows without re-introducing heavy borders.
+   Brutalist Warm — Component primitives
+   All shapes are squared (radius:0). All borders are 2px foreground.
+   No shadows. Press feedback uses translateY(2px).
    ========================================================================= */
 
-/* ---------- Card (PRIMARY tier — heavy ink border) ---------- */
+/* ---------- Card ---------- */
 type CardProps = {
   children: ReactNode;
   className?: string;
@@ -26,93 +18,6 @@ export function Card({ children, className, as: Tag = "div" }: CardProps) {
     <Tag className={cn("border-2 border-foreground bg-card p-3", className)}>
       {children}
     </Tag>
-  );
-}
-
-/* ---------- Surface (SECONDARY tier — hairline + raised) ---------- */
-type SurfaceProps = {
-  children: ReactNode;
-  className?: string;
-  as?: "div" | "section" | "article" | "li" | "ul";
-  /** "raised" (default) = lighter than background. "sunken" = quietest. */
-  tone?: "raised" | "sunken";
-  /** Drop the hairline border entirely. */
-  borderless?: boolean;
-};
-export function Surface({
-  children,
-  className,
-  as: Tag = "div",
-  tone = "raised",
-  borderless = false,
-}: SurfaceProps) {
-  return (
-    <Tag
-      className={cn(
-        tone === "sunken" ? "surface-sunken" : "surface-raised",
-        !borderless && "border-hairline",
-        className,
-      )}
-    >
-      {children}
-    </Tag>
-  );
-}
-
-/* ---------- HeroCard ----------
-   The single anchor on a screen — used for Daily Mission, etc.
-   Heavy ink border + ink left stripe for unmistakable focus. */
-export function HeroCard({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={cn(
-        "relative border-2 border-foreground bg-card p-5 lg:p-6",
-        className,
-      )}
-    >
-      <span
-        aria-hidden
-        className="absolute left-0 top-0 bottom-0 w-1.5 bg-foreground"
-      />
-      {children}
-    </div>
-  );
-}
-
-/* ---------- SectionLabel ----------
-   Tiny uppercase mono header. Used above lists to identify a zone WITHOUT
-   wrapping the list in another card. Visual weight via type, not box. */
-export function SectionLabel({
-  children,
-  count,
-  action,
-  className,
-}: {
-  children: ReactNode;
-  count?: number | string;
-  action?: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn("flex items-center justify-between mb-2", className)}>
-      <div className="flex items-center gap-2">
-        <span className="text-[11px] font-mono font-bold uppercase tracking-[0.25em] text-muted-foreground">
-          {children}
-        </span>
-        {count !== undefined && (
-          <span className="text-[11px] font-mono font-bold tabular-nums text-foreground">
-            {count}
-          </span>
-        )}
-      </div>
-      {action}
-    </div>
   );
 }
 

@@ -1,15 +1,6 @@
 import { useMemo } from "react";
-import { cn } from "@/lib/utils";
-import { HeroCard } from "./ui-brutal";
 
-/* =========================================================================
-   DailyMissionCard — the screen's HERO. Single anchor of focus.
-
-   Big number, strong progress bar, status badge top-right, motivational
-   subline. Designed to be visibly larger / heavier than every other block
-   on the page. Do not duplicate this treatment elsewhere.
-   ========================================================================= */
-
+/* Pick a heatmap CSS var based on percentage 0-100. */
 function fillForPct(pct: number): string {
   if (pct >= 100) return "var(--heatmap-5)";
   if (pct >= 80) return "var(--heatmap-4)";
@@ -19,11 +10,11 @@ function fillForPct(pct: number): string {
   return "var(--heatmap-0)";
 }
 
-function statusFor(pct: number): { label: string; tone: "active" | "warm" | "complete" | "idle" } {
-  if (pct >= 100) return { label: "Complete", tone: "complete" };
-  if (pct >= 50) return { label: "On track", tone: "active" };
-  if (pct > 0) return { label: "In progress", tone: "warm" };
-  return { label: "Not started", tone: "idle" };
+function statusFor(pct: number) {
+  if (pct >= 100) return { emoji: "🏆", label: "Crushed it" };
+  if (pct >= 50) return { emoji: "🔥", label: "On track" };
+  if (pct > 0) return { emoji: "🎯", label: "In progress" };
+  return { emoji: "💤", label: "Not started" };
 }
 
 export function DailyMissionCard({
@@ -42,63 +33,42 @@ export function DailyMissionCard({
   const status = statusFor(pct);
   const fill = fillForPct(pct);
 
-  const badgeClass = cn(
-    "shrink-0 px-2.5 py-1 font-mono font-bold text-[10px] uppercase tracking-[0.15em]",
-    status.tone === "complete" && "bg-foreground text-background",
-    status.tone === "active" && "border-2 border-foreground bg-card text-foreground",
-    status.tone === "warm" && "border-2 border-foreground bg-[var(--amber)] text-foreground",
-    status.tone === "idle" && "border-hairline bg-transparent text-muted-foreground",
-  );
-
   return (
-    <HeroCard className="pl-7 lg:pl-8">
-      <div className="flex items-start justify-between gap-3 mb-4 lg:mb-5">
-        <div>
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-muted-foreground">
+    <div className="border-2 border-foreground bg-card p-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xl leading-none" aria-hidden>
+            {status.emoji}
+          </span>
+          <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em]">
             Daily Mission
-          </div>
-          <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-5xl lg:text-6xl font-bold font-mono tabular-nums leading-none">
-              {current}
-            </span>
-            <span className="text-2xl lg:text-3xl font-mono text-muted-foreground tabular-nums leading-none">
-              / {target}
-            </span>
-          </div>
-          <div className="mt-1 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-            doors today
-          </div>
+          </h2>
         </div>
-        <span className={badgeClass}>{status.label}</span>
+        <span className="px-2 py-0.5 border-2 border-foreground bg-background font-mono font-bold text-[10px] uppercase tracking-wider">
+          {status.label}
+        </span>
       </div>
 
-      {/* Progress bar — chunky, dominant */}
-      <div
-        className="relative h-3 w-full bg-muted overflow-hidden"
-        role="progressbar"
-        aria-valuenow={pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
+      {/* Progress bar */}
+      <div className="relative h-6 w-full bg-muted border-2 border-foreground overflow-hidden">
         <div
           className="absolute inset-y-0 left-0 transition-[width] duration-300 ease-out"
           style={{ width: `${pct}%`, background: fill }}
+          aria-hidden
         />
-      </div>
-      <div className="mt-1.5 flex items-center justify-between">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-          {pct}% of goal
-        </span>
-        <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground tabular-nums">
-          {Math.max(0, target - current)} to go
-        </span>
+        <div className="absolute inset-0 flex items-center justify-center font-mono font-bold text-xs tabular-nums text-foreground mix-blend-difference">
+          <span className="text-background">
+            {current} / {target} doors
+          </span>
+        </div>
       </div>
 
       {suggestion && (
-        <p className="mt-4 text-sm font-mono text-foreground/80 leading-relaxed">
+        <p className="mt-3 text-xs font-mono text-muted-foreground">
           {suggestion}
         </p>
       )}
-    </HeroCard>
+    </div>
   );
 }

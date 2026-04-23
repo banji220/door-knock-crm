@@ -1,15 +1,10 @@
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 
 const INCREMENTS = [1, 5, 10, 25] as const;
 
-/* =========================================================================
-   QuickLogCard — inline pill row. Lightweight, no heavy container.
-
-   Sits directly on the page: a single mono label + a 4-up segmented
-   control. Each press flashes inverted briefly. Designed to feel as
-   fast as a keyboard shortcut — the opposite of a "card with padding".
-   ========================================================================= */
+/* Brutalist quick-log card — 4 increment buttons in a row.
+   Tap → bumps the local count (mock) and triggers a flash animation
+   on the tapped button. Used on Today + Me dashboards. */
 export function QuickLogCard({
   initialCount = 24,
 }: {
@@ -28,25 +23,20 @@ export function QuickLogCard({
   };
 
   return (
-    <div className="flex items-center gap-3 sm:gap-4">
-      <div className="shrink-0">
-        <div className="text-[10px] font-mono font-bold uppercase tracking-[0.25em] text-muted-foreground leading-none">
+    <div className="border-2 border-foreground bg-card p-5">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xs font-mono font-bold uppercase tracking-[0.2em]">
           Quick Log
-        </div>
-        <div className="mt-1 text-xl font-mono font-bold tabular-nums leading-none">
-          {count}
-          <span className="ml-1 text-xs font-mono text-muted-foreground font-normal">
-            today
+        </h2>
+        <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+          Today:{" "}
+          <span className="font-bold text-foreground tabular-nums">
+            {count}
           </span>
-        </div>
+        </span>
       </div>
 
-      {/* Segmented control — 4 pills, hairline border, share edges */}
-      <div
-        className="flex-1 grid grid-cols-4 border-hairline divide-x divide-[var(--hairline)] surface-raised"
-        role="group"
-        aria-label="Quick log doors"
-      >
+      <div className="grid grid-cols-4 gap-2">
         {INCREMENTS.map((n) => {
           const isFlashed = flashed === n;
           return (
@@ -55,12 +45,12 @@ export function QuickLogCard({
               type="button"
               onClick={() => bump(n)}
               aria-label={`Add ${n} doors`}
-              className={cn(
-                "press-brutal py-2.5 font-mono font-bold text-base tabular-nums transition-colors",
+              className={[
+                "press-brutal border-2 border-foreground font-mono font-bold text-xl py-3 transition-colors",
                 isFlashed
                   ? "bg-foreground text-background"
-                  : "text-foreground hover:bg-muted",
-              )}
+                  : "bg-card text-foreground hover:bg-muted",
+              ].join(" ")}
             >
               +{n}
             </button>
