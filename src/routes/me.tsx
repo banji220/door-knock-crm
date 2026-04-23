@@ -101,19 +101,17 @@ function MePage() {
           action={<DateRangeToggle value={range} onChange={setRange} />}
         />
 
-        {/* KPI row — 5 stat cards spanning full width */}
-        <section className="grid grid-cols-5 gap-4 mb-6">
-          <KpiTile value={STATS.knocks} label="Doors Today" />
-          <KpiTile value={STATS.quotes} label="Quotes" />
-          <KpiTile value={STATS.closes} label="Closes" />
-          <KpiTile value={`${closeRate}%`} label="Close Rate" accent />
-          <KpiTile value={`$${STATS.revenue.toLocaleString()}`} label="Revenue" accent />
-        </section>
-
         {/* Two-column grid: data column (1fr) + action column (380px) */}
         <section className="grid grid-cols-[1fr_380px] gap-6">
-          {/* === LEFT: hero column (heatmap only) === */}
+          {/* === LEFT: KPI row + heatmap hero === */}
           <div className="min-w-0 flex flex-col gap-4">
+            <div className="grid grid-cols-5 gap-4">
+              <KpiTile value={STATS.knocks} label="Doors Today" />
+              <KpiTile value={STATS.quotes} label="Quotes" />
+              <KpiTile value={STATS.closes} label="Closes" />
+              <KpiTile value={`${closeRate}%`} label="Close Rate" accent />
+              <KpiTile value={`$${STATS.revenue.toLocaleString()}`} label="Revenue" accent />
+            </div>
             <ContributionHeatmap />
           </div>
 
