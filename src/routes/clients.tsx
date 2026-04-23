@@ -5,6 +5,7 @@ import { Card, Input, SectionHeader } from "@/components/ui-brutal";
 import { mockCustomers, type Customer } from "@/lib/mock-data";
 import { Search, Phone, Star, Clock } from "lucide-react";
 import { HouseDetail } from "@/components/HouseDetail";
+import { findPinByAddress, setSelectedPin } from "@/components/PersistentMap";
 import { formatMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/clients")({
@@ -59,8 +60,13 @@ function ClientsPage() {
     [q],
   );
 
-  // Tap a customer row → open the read-only detail sheet (NOT the capture form).
-  const openCustomer = (c: Customer) => setSelected(c);
+  // Tap a customer row → open the detail sheet AND highlight + pan the
+  // matching map pin so the desktop right drawer + map stay in sync.
+  const openCustomer = (c: Customer) => {
+    setSelected(c);
+    const pin = findPinByAddress(c.address);
+    if (pin) setSelectedPin(pin);
+  };
 
   return (
     <AppShell title="Clients" subtitle={`${totals.count} customers`}>
