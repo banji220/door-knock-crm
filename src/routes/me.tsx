@@ -1,13 +1,16 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { AppShell, PageHeader } from "@/components/AppShell";
+import { AppShell, PageHeader, DesktopPageHeader } from "@/components/AppShell";
 import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 import { StreakPanel } from "@/components/StreakPanel";
 import { MomentumMeter } from "@/components/MomentumMeter";
 import { BadgesPanel } from "@/components/BadgesPanel";
 import { GoogleCalendarCard } from "@/components/GoogleCalendarCard";
 import { WeeklyGoal } from "@/components/WeeklyGoal";
-import { WeeklyInsights } from "@/components/WeeklyInsights";
+import { KpiTile } from "@/components/KpiTile";
+import { DateRangeToggle, useDateRange } from "@/components/DateRangeToggle";
+import { DailyMissionCard } from "@/components/DailyMissionCard";
+import { QuickLogCard } from "@/components/QuickLogCard";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { buildYearOfActivity, computeStreaks } from "@/lib/activity-data";
 import { type DayStats, isoDate } from "@/lib/day-stats";
@@ -21,18 +24,22 @@ const STATS = {
   knocks: 24,
   quotes: 6,
   closes: 2,
+  revenue: 1240,
+};
+
+const ACTIVity = {
+  data: undefined as unknown,
 };
 
 function MePage() {
-  /* Persisted weekly target */
   const [weeklyTarget, setWeeklyTarget] = useLocalStorage<number>(
     "giraffe.weeklyTarget",
     150,
   );
+  const [range, setRange] = useDateRange("Today");
 
-  /* ----- Build the stats map from the same seeded year used by the heatmap.
-     Override TODAY's row with STATS.knocks so the 7-day chart reflects the
-     current day's mocked count. ----- */
+  /* Build the stats map from the seeded year used by the heatmap. Override
+     today with mocked STATS.knocks so the day chart matches the dashboard. */
   const statsMap = useMemo<Record<string, DayStats>>(() => {
     const days = buildYearOfActivity();
     const map: Record<string, DayStats> = {};
@@ -62,19 +69,15 @@ function MePage() {
   const closeRate =
     STATS.quotes > 0 ? Math.round((STATS.closes / STATS.quotes) * 100) : 0;
 
-  const stats = [
+  const mobileStats = [
     { label: "Knocks", value: STATS.knocks, accent: false },
     { label: "Quotes", value: STATS.quotes, accent: false },
     { label: "Closes", value: STATS.closes, accent: false },
     { label: "Close Rate", value: `${closeRate}%`, accent: true },
   ];
 
-  /* ===== Desktop layout (≥1024px) =====
-     Hero strip (profile + today stats) → wide heatmap → 3-col modules.
-     Mobile/tablet keeps the existing single-column stack. */
   return (
     <AppShell
-      wide
       header={
         <PageHeader
           eyebrow="Me"
@@ -88,110 +91,56 @@ function MePage() {
       }
     >
       {/* ============================================================
-          DESKTOP — wide dashboard (lg+)
+          DESKTOP — command center (≥1024px)
           ============================================================ */}
-      <div className="hidden lg:block max-w-[1400px] mx-auto w-full">
-        {/* Hero strip — profile + today's stats */}
-        <section className="grid grid-cols-12 gap-4 mb-6">
-          {/* Profile */}
-          <div className="col-span-4 border-2 border-foreground bg-card p-6 flex items-center gap-5">
-            <div
-              className="size-24 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-4xl"
-              aria-label="Avatar"
-            >
-              HG
-            </div>
-            <div className="min-w-0">
-              <div className="text-2xl font-bold font-display tracking-tight leading-none">
-                Holy Giraffe
-              </div>
-              <div className="mt-2 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
-                Window Cleaning Pro
-              </div>
-              <div className="mt-3 text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-                Streak{" "}
-                <span className="font-bold text-foreground tabular-nums">
-                  {streaks.current}d
-                </span>{" "}
-                · Best{" "}
-                <span className="font-bold text-foreground tabular-nums">
-                  {streaks.best}d
-                </span>
-              </div>
-            </div>
-          </div>
+      <div className="hidden lg:block">
+        {/* Top bar: PERFORMANCE + name on left, date range on right */}
+        <DesktopPageHeader
+          eyebrow="Performance"
+          title="Holy Giraffe"
+          action={<DateRangeToggle value={range} onChange={setRange} />}
+        />
 
-          {/* Today's Stats */}
-          <div className="col-span-8">
-            <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-              Today
-            </div>
-            <div className="grid grid-cols-4 gap-3">
-              {stats.map((s) => (
-                <div
-                  key={s.label}
-                  className="border-2 border-foreground bg-card p-5 text-center"
-                >
-                  <div
-                    className={`text-4xl font-bold font-mono leading-none tabular-nums ${
-                      s.accent ? "text-primary" : "text-foreground"
-                    }`}
-                  >
-                    {s.value}
-                  </div>
-                  <div className="mt-2 text-[11px] font-mono font-bold uppercase tracking-wider text-muted-foreground">
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* KPI row — 5 stat cards spanning full width */}
+        <section className="grid grid-cols-5 gap-4 mb-6">
+          <KpiTile value={STATS.knocks} label="Doors Today" />
+          <KpiTile value={STATS.quotes} label="Quotes" />
+          <KpiTile value={STATS.closes} label="Closes" />
+          <KpiTile value={`${closeRate}%`} label="Close Rate" accent />
+          <KpiTile value={`$${STATS.revenue.toLocaleString()}`} label="Revenue" accent />
         </section>
 
-        {/* Wide heatmap — full focal point */}
-        <section className="mb-6">
-          <ContributionHeatmap />
-        </section>
+        {/* Two-column grid: data column (1fr) + action column (380px) */}
+        <section className="grid grid-cols-[1fr_380px] gap-6">
+          {/* === LEFT: data column === */}
+          <div className="min-w-0 flex flex-col gap-4">
+            <ContributionHeatmap />
+            <MomentumMeter />
+          </div>
 
-        {/* Weekly row — goal + insights side by side */}
-        <section className="grid grid-cols-12 gap-4 mb-6">
-          <div className="col-span-5">
+          {/* === RIGHT: action column === */}
+          <div className="flex flex-col gap-4">
+            <DailyMissionCard
+              current={14}
+              target={30}
+              suggestion="Hit 6 more before lunch — momentum stays alive."
+            />
             <WeeklyGoal
               data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
               weeklyTarget={weeklyTarget}
               onTargetChange={setWeeklyTarget}
             />
-          </div>
-          <div className="col-span-7">
-            <WeeklyInsights
-              data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
-              weeklyTarget={weeklyTarget}
-            />
-          </div>
-        </section>
-
-        {/* Modules row — streak / momentum / calendar */}
-        <section className="grid grid-cols-12 gap-4 mb-6">
-          <div className="col-span-4">
             <StreakPanel
               currentStreak={streaks.current}
               longestStreak={streaks.best}
             />
-          </div>
-          <div className="col-span-5">
-            <MomentumMeter />
-          </div>
-          <div className="col-span-3">
+            <QuickLogCard initialCount={STATS.knocks} />
+            <BadgesPanel />
             <GoogleCalendarCard />
           </div>
         </section>
 
-        {/* Badges — full width */}
-        <section className="mb-6">
-          <BadgesPanel />
-        </section>
-
-        <div className="text-center pt-2 pb-6">
+        <div className="text-center pt-8 pb-4">
           <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
             Sign out
           </button>
@@ -200,12 +149,8 @@ function MePage() {
 
       {/* ============================================================
           MOBILE / TABLET — stacked layout (<lg)
-          Everything sits in normal document flow. No absolute
-          positioning, no overlapping elements — clean top-to-bottom
-          stack with explicit vertical rhythm.
           ============================================================ */}
       <div className="lg:hidden">
-        {/* Profile header — centered, vertically stacked */}
         <section className="mb-6 flex flex-col items-center text-center">
           <div
             className="size-20 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-3xl"
@@ -221,12 +166,11 @@ function MePage() {
           </div>
         </section>
 
-        {/* Today's stats — 2x2 grid */}
         <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
           Today
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {stats.map((s) => (
+          {mobileStats.map((s) => (
             <div
               key={s.label}
               className="border-2 border-foreground bg-card p-4 text-center"
@@ -245,7 +189,6 @@ function MePage() {
           ))}
         </div>
 
-        {/* Streak summary — single row beneath the stats grid */}
         <div className="mt-4 flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
           <span>
             Streak{" "}
@@ -262,7 +205,6 @@ function MePage() {
           </span>
         </div>
 
-        {/* Sections below — each separated by mt-6 */}
         <div className="mt-6">
           <ContributionHeatmap />
         </div>
@@ -272,10 +214,6 @@ function MePage() {
             data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
             weeklyTarget={weeklyTarget}
             onTargetChange={setWeeklyTarget}
-          />
-          <WeeklyInsights
-            data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
-            weeklyTarget={weeklyTarget}
           />
         </div>
 
