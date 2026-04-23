@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useRouterState, useNavigate } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Search } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
 import {
@@ -320,30 +320,59 @@ function DesktopRightPanel({ open }: { open: boolean }) {
 }
 
 /* ---------------- DesktopTopBar ----------------
-   56px brand bar that spans the full viewport above both panel and map. */
+   56px dark inverted strip across the full viewport. Holds the GIRAFFE
+   wordmark, a center search field, and the user avatar (with a pending
+   notification dot). Always visible above both panels and the map. */
 function DesktopTopBar() {
+  /* Hard-coded for now — wire to real pending count when available. */
+  const hasPending = true;
+
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 bg-[var(--amber)] border-b-2 border-foreground"
+      className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 bg-foreground text-background border-b-2 border-foreground"
       style={{ height: `${TOPBAR_H}px` }}
     >
-      <Link to="/" className="flex items-baseline gap-2">
-        <span className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-foreground/70">
-          Field CRM
-        </span>
-        <span className="text-xl font-display font-bold uppercase tracking-tight leading-none">
-          Giraffe
-        </span>
+      {/* Left — wordmark */}
+      <Link
+        to="/"
+        className="font-mono font-bold uppercase tracking-widest text-base text-background"
+        aria-label="Giraffe — go to Today"
+      >
+        GIRAFFE
       </Link>
-      <div className="flex items-center gap-3">
-        <Link
-          to="/me"
-          className="press-brutal size-9 border-2 border-foreground bg-background flex items-center justify-center font-mono font-bold text-xs"
-          aria-label="My profile"
-        >
-          HG
-        </Link>
+
+      {/* Center — global search */}
+      <div className="flex-1 flex justify-center px-6">
+        <label className="relative w-80 max-w-full">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-background/60"
+            strokeWidth={2.5}
+            aria-hidden
+          />
+          <input
+            type="search"
+            placeholder="Search address or client..."
+            aria-label="Search address or client"
+            className="w-80 max-w-full bg-background/10 border border-background/20 text-background placeholder:text-background/50 font-mono text-sm pl-9 pr-4 py-2 focus:outline-none focus:border-background/60 focus:bg-background/15"
+            style={{ borderRadius: 0 }}
+          />
+        </label>
       </div>
+
+      {/* Right — avatar + notification dot */}
+      <Link
+        to="/me"
+        className="relative size-9 border-2 border-background/30 bg-background/10 flex items-center justify-center font-mono font-bold text-xs text-background hover:border-background/60 transition-colors"
+        aria-label="My profile"
+      >
+        HG
+        {hasPending && (
+          <span
+            className="absolute -top-1 -right-1 size-2.5 bg-[var(--amber)] border border-foreground"
+            aria-label="Pending items"
+          />
+        )}
+      </Link>
     </header>
   );
 }
