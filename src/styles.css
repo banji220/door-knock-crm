@@ -229,9 +229,13 @@
 @layer base {
   * {
     border-color: var(--color-border);
-    /* Kill any inherited shadow + force square corners */
+    /* Force square corners app-wide — brutalist constant */
     border-radius: 0 !important;
-    box-shadow: none !important;
+  }
+  /* Kill default elevation, but allow opt-in shadows for the brutalist
+     "offset stack" treatment and accent stripes (inset shadows). */
+  *:not(.shadow-allow):not([class*="shadow-["]):not([class*="stripe-"]) {
+    box-shadow: none;
   }
 
   html, body {
