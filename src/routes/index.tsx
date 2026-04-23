@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useEffect, useState } from "react";
-import { AppShell, PageHeader } from "@/components/AppShell";
+import { AppShell, PageHeader, DesktopPageHeader } from "@/components/AppShell";
 
 import { ActionSection } from "@/components/ActionSection";
 import { ActionItem } from "@/components/ActionItem";
+import { DailyMissionCard } from "@/components/DailyMissionCard";
+import { QuickLogCard } from "@/components/QuickLogCard";
 import {
   mockKnocks, mockFollowUps, mockJobs, mockQuotes, mockAppointments,
   mockLeads, todayStats,
@@ -48,22 +50,18 @@ function fmtTime(iso: string): string {
 function TodayPage() {
   const knocks = mockKnocks;
 
-  /* Sectioned data */
   const appointmentsToday = useMemo(
     () => mockAppointments.filter((a) => isToday(a.time)),
     [],
   );
-
   const jobsToday = useMemo(
     () => mockJobs.filter((j) => isToday(j.scheduledFor)),
     [],
   );
-
   const followUpsDue = useMemo(
     () => mockFollowUps.filter((f) => daysAgo(f.dueDate) >= 0),
     [],
   );
-
   const expiringQuotes = useMemo(
     () =>
       mockQuotes.filter(
@@ -91,6 +89,78 @@ function TodayPage() {
     followUpsDue.length +
     expiringQuotes.length;
 
+  /* ===== Sub-renderers shared between mobile + desktop ===== */
+  const renderAppointments = () => (
+    <ActionSection label="Appointments Today" count={appointmentsToday.length}>
+      {appointmentsToday.map((a) => (
+        <li key={a.id}>
+          <ActionItem
+            dueLabel={fmtTime(a.time)}
+            name={a.name}
+            address={a.address}
+            phone={a.phone}
+            price={a.price}
+          />
+        </li>
+      ))}
+    </ActionSection>
+  );
+
+  const renderJobs = () => (
+    <ActionSection label="Jobs Today" count={jobsToday.length}>
+      {jobsToday.map((j) => (
+        <li key={j.id}>
+          <ActionItem
+            dueLabel={fmtTime(j.scheduledFor)}
+            name={j.customerName}
+            address={j.address}
+            phone={phoneFor(j.address)}
+            price={j.price}
+          />
+        </li>
+      ))}
+    </ActionSection>
+  );
+
+  const renderFollowUps = () => (
+    <ActionSection label="Follow-Ups Due" count={followUpsDue.length}>
+      {followUpsDue.map((f) => {
+        const due = fmtDueLabel(f.dueDate);
+        return (
+          <li key={f.id}>
+            <ActionItem
+              dueLabel={due.label}
+              overdue={due.overdue}
+              name={f.leadName}
+              address={f.address}
+              phone={phoneFor(f.address)}
+            />
+          </li>
+        );
+      })}
+    </ActionSection>
+  );
+
+  const renderExpiring = () => (
+    <ActionSection label="Expiring Quotes" count={expiringQuotes.length}>
+      {expiringQuotes.map((q) => {
+        const days = daysAgo(q.createdAt);
+        return (
+          <li key={q.id}>
+            <ActionItem
+              dueLabel={`${days}d old`}
+              overdue={days >= 7}
+              name={q.leadName}
+              address={q.address}
+              phone={phoneFor(q.address)}
+              price={q.price}
+            />
+          </li>
+        );
+      })}
+    </ActionSection>
+  );
+
   return (
     <AppShell
       header={
@@ -116,84 +186,76 @@ function TodayPage() {
         />
       }
     >
-      <div className="space-y-5">
-        <ActionSection label="Appointments Today" count={appointmentsToday.length}>
-          {appointmentsToday.map((a) => (
-            <li key={a.id}>
-              <ActionItem
-                dueLabel={fmtTime(a.time)}
-                name={a.name}
-                address={a.address}
-                phone={a.phone}
-                price={a.price}
-              />
-            </li>
-          ))}
-        </ActionSection>
+      {/* ============================================================
+          DESKTOP — two-column command center (≥1024px)
+          ============================================================ */}
+      <div className="hidden lg:block">
+        <DesktopPageHeader
+          eyebrow="Today"
+          title={fullDate || "Today"}
+          action={
+            <Link
+              to="/quote"
+              className="press-brutal inline-flex items-center gap-2 border-2 border-foreground bg-foreground text-background px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider"
+            >
+              <Plus className="size-4" strokeWidth={3} />
+              New Quote
+            </Link>
+          }
+        />
 
-        {/* JOBS TODAY */}
-        <ActionSection label="Jobs Today" count={jobsToday.length}>
-          {jobsToday.map((j) => (
-            <li key={j.id}>
-              <ActionItem
-                dueLabel={fmtTime(j.scheduledFor)}
-                name={j.customerName}
-                address={j.address}
-                phone={phoneFor(j.address)}
-                price={j.price}
-              />
-            </li>
-          ))}
-        </ActionSection>
+        <section className="grid grid-cols-[1fr_380px] gap-6">
+          {/* === LEFT: focus column === */}
+          <div className="min-w-0 flex flex-col gap-4">
+            <QuickLogCard initialCount={knocks.length} />
+            <DailyMissionCard
+              current={14}
+              target={30}
+              suggestion="Hit 6 more before lunch — momentum stays alive."
+            />
 
-        {/* FOLLOW-UPS DUE */}
-        <ActionSection label="Follow-Ups Due" count={followUpsDue.length}>
-          {followUpsDue.map((f) => {
-            const due = fmtDueLabel(f.dueDate);
-            return (
-              <li key={f.id}>
-                <ActionItem
-                  dueLabel={due.label}
-                  overdue={due.overdue}
-                  name={f.leadName}
-                  address={f.address}
-                  phone={phoneFor(f.address)}
-                />
-              </li>
-            );
-          })}
-        </ActionSection>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border-2 border-foreground bg-card p-5">
+                {renderAppointments()}
+              </div>
+              <div className="border-2 border-foreground bg-card p-5">
+                {renderJobs()}
+              </div>
+            </div>
+          </div>
 
-        {/* EXPIRING QUOTES */}
-        <ActionSection label="Expiring Quotes" count={expiringQuotes.length}>
-          {expiringQuotes.map((q) => {
-            const days = daysAgo(q.createdAt);
-            return (
-              <li key={q.id}>
-                <ActionItem
-                  dueLabel={`${days}d old`}
-                  overdue={days >= 7}
-                  name={q.leadName}
-                  address={q.address}
-                  phone={phoneFor(q.address)}
-                  price={q.price}
-                />
-              </li>
-            );
-          })}
-        </ActionSection>
+          {/* === RIGHT: urgency column === */}
+          <div className="flex flex-col gap-4">
+            <div className="border-2 border-foreground bg-card p-5">
+              {renderFollowUps()}
+            </div>
+            <div className="border-2 border-foreground bg-card p-5">
+              {renderExpiring()}
+            </div>
+          </div>
+        </section>
       </div>
 
-      {/* Quote shortcut */}
-      <Link
-        to="/quote"
-        className="press-brutal block w-full border-2 border-foreground bg-foreground text-background py-4 mt-4 text-center font-mono font-bold uppercase tracking-wider"
-      >
-        <Plus className="inline size-5 mr-2 -mt-1" strokeWidth={3} />
-        New Quote
-      </Link>
-      {/* Spacer so the floating bottom nav doesn't clip last button */}
-      <div className="h-2" aria-hidden />
+      {/* ============================================================
+          MOBILE / TABLET — single stacked column (<lg)
+          ============================================================ */}
+      <div className="lg:hidden">
+        <div className="space-y-5">
+          {renderAppointments()}
+          {renderJobs()}
+          {renderFollowUps()}
+          {renderExpiring()}
+        </div>
+
+        <Link
+          to="/quote"
+          className="press-brutal block w-full border-2 border-foreground bg-foreground text-background py-4 mt-4 text-center font-mono font-bold uppercase tracking-wider"
+        >
+          <Plus className="inline size-5 mr-2 -mt-1" strokeWidth={3} />
+          New Quote
+        </Link>
+        <div className="h-2" aria-hidden />
+      </div>
     </AppShell>
   );
 }
