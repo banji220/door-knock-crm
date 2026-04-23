@@ -153,6 +153,18 @@ function MePage() {
       <div className="lg:hidden space-y-6">
         <QuickLogCard initialCount={STATS.knocks} />
 
+        <DailyMissionCard
+          current={14}
+          target={30}
+          suggestion="Hit 6 more before lunch — momentum stays alive."
+        />
+
+        <WeeklyGoal
+          data={weeklyData}
+          weeklyTarget={weeklyTarget}
+          onTargetChange={setWeeklyTarget}
+        />
+
         <div>
           <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
             Today
@@ -184,18 +196,6 @@ function MePage() {
         </div>
 
         <ContributionHeatmap />
-
-        <DailyMissionCard
-          current={14}
-          target={30}
-          suggestion="Hit 6 more before lunch — momentum stays alive."
-        />
-
-        <WeeklyGoal
-          data={weeklyData}
-          weeklyTarget={weeklyTarget}
-          onTargetChange={setWeeklyTarget}
-        />
 
         <StreakPanel
           currentStreak={streaks.current}
