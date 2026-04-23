@@ -199,30 +199,33 @@ function MePage() {
       </div>
 
       {/* ============================================================
-          MOBILE / TABLET — original stacked layout (<lg)
+          MOBILE / TABLET — stacked layout (<lg)
+          Everything sits in normal document flow. No absolute
+          positioning, no overlapping elements — clean top-to-bottom
+          stack with explicit vertical rhythm.
           ============================================================ */}
       <div className="lg:hidden">
-        <section className="mb-6 flex items-center gap-4">
+        {/* Profile header — centered, vertically stacked */}
+        <section className="mb-6 flex flex-col items-center text-center">
           <div
             className="size-20 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-3xl"
             aria-label="Avatar"
           >
             HG
           </div>
-          <div className="min-w-0">
-            <div className="text-xl font-bold font-display tracking-tight leading-none">
-              Holy Giraffe
-            </div>
-            <div className="mt-1.5 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
-              Window Cleaning Pro
-            </div>
+          <div className="mt-3 text-xl font-bold font-display tracking-tight leading-none">
+            Holy Giraffe
+          </div>
+          <div className="mt-2 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+            Window Cleaning Pro
           </div>
         </section>
 
+        {/* Today's stats — 2x2 grid */}
         <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
           Today
         </div>
-        <div className="grid grid-cols-2 gap-2 mb-6">
+        <div className="grid grid-cols-2 gap-3">
           {stats.map((s) => (
             <div
               key={s.label}
@@ -235,18 +238,36 @@ function MePage() {
               >
                 {s.value}
               </div>
-              <div className="mt-2 text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+              <div className="mt-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
                 {s.label}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mb-4">
+        {/* Streak summary — single row beneath the stats grid */}
+        <div className="mt-4 flex items-center justify-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
+          <span>
+            Streak{" "}
+            <span className="font-bold text-foreground tabular-nums">
+              {streaks.current}d
+            </span>
+          </span>
+          <span aria-hidden>·</span>
+          <span>
+            Best{" "}
+            <span className="font-bold text-foreground tabular-nums">
+              {streaks.best}d
+            </span>
+          </span>
+        </div>
+
+        {/* Sections below — each separated by mt-6 */}
+        <div className="mt-6">
           <ContributionHeatmap />
         </div>
 
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="mt-6 flex flex-col gap-4">
           <WeeklyGoal
             data={statsMap as unknown as Record<string, { doors: number; conversations: number; leads: number; appointments: number; wins: number }>}
             weeklyTarget={weeklyTarget}
@@ -258,12 +279,23 @@ function MePage() {
           />
         </div>
 
-        <StreakPanel currentStreak={streaks.current} longestStreak={streaks.best} />
-        <MomentumMeter />
-        <BadgesPanel />
-        <GoogleCalendarCard />
+        <div className="mt-6">
+          <StreakPanel currentStreak={streaks.current} longestStreak={streaks.best} />
+        </div>
 
-        <div className="text-center pt-2 pb-4">
+        <div className="mt-6">
+          <MomentumMeter />
+        </div>
+
+        <div className="mt-6">
+          <BadgesPanel />
+        </div>
+
+        <div className="mt-6">
+          <GoogleCalendarCard />
+        </div>
+
+        <div className="text-center pt-6 pb-4">
           <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
             Sign out
           </button>
