@@ -4,32 +4,28 @@ import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { Logo } from "./Logo";
 
-/* =========================================================================
-   AppShell — 3 intentional layouts. NEVER one layout stretched across sizes.
-
-   Mobile  (≤640):   full-bleed single column, sticky header, bottom nav.
-   Tablet  (641-1024): centered 720px column, side-bordered, bottom nav.
-   Desktop (≥1025):  fixed 240px sidebar + scrollable main (1400px max).
-
-   Each tier has its own container/padding/nav. Constraints do NOT leak
-   between tiers. The Map route opts into bleed:true for full-bleed main.
-   ========================================================================= */
-
 type AppShellProps = {
   title?: string;
   subtitle?: string;
   right?: ReactNode;
-  /** Override the entire mobile/tablet header (e.g. richer page-header) */
+  /** Override the entire mobile/tablet header (e.g. for a richer page-header layout) */
   header?: ReactNode;
   children: ReactNode;
-  /** Pages that own their main area edge-to-edge (e.g. Map). */
+  /** Pages that own their full main area (e.g. Map full-bleed) — disables main padding/max-width on desktop. */
   bleed?: boolean;
-  /** Legacy prop, no-op. */
+  /** Legacy prop, kept for source compat. No-op in the new layout. */
   wide?: boolean;
 };
 
 const SIDEBAR_W = 240;
 
+/* =========================================================================
+   AppShell
+   - Mobile  (<640):  full-width single column, sticky header, bottom nav.
+   - Tablet  (640+):  centered max-w-2xl column, side-bordered, bottom nav.
+   - Desktop (≥1024): fixed 240px dark sidebar + scrollable main content.
+                      Map route gets bleed:true → main area is edge-to-edge.
+   ========================================================================= */
 export function AppShell({
   title,
   subtitle,
@@ -42,17 +38,17 @@ export function AppShell({
   const isMapRoute = pathname === "/map";
   const fullBleed = bleed || isMapRoute;
 
-  /* Mobile/tablet header — sticky, full width of the column */
-  const renderTouchHeader = () =>
+  /* Mobile/tablet header — kept identical to existing behavior */
+  const renderMobileHeader = () =>
     header ? (
       <div className="sticky top-0 z-30 bg-card border-b-2 border-foreground">
         {header}
       </div>
     ) : (
       <header className="sticky top-0 z-30 bg-[var(--amber)] border-b-2 border-foreground">
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+        <div className="flex items-center justify-between px-4 py-3">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-display font-bold uppercase text-foreground tracking-tight leading-none">
+            <h1 className="text-3xl font-display font-bold uppercase text-foreground tracking-tight leading-none">
               {title}
             </h1>
             {subtitle && (
@@ -68,32 +64,16 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop sidebar — fixed left, lg+ only */}
+      {/* Desktop sidebar — always present at lg+, fixed left */}
       <DesktopSidebar />
 
       {/* ===================================================================
-          Mobile + Tablet (<lg) — single column with bottom nav.
-          Mobile: 100% width, no side borders.
-          Tablet: 720px max, centered, side borders for "phone slab" feel.
+          Mobile / Tablet (<lg) — single phone-like column with bottom nav
           =================================================================== */}
-      <div
-        className={[
-          "lg:hidden min-h-screen flex flex-col bg-background",
-          // mobile defaults: full width
-          "max-w-full",
-          // tablet: clamp to 720, side borders
-          "sm:max-w-[720px] sm:mx-auto sm:border-x-2 sm:border-foreground",
-        ].join(" ")}
-      >
-        {renderTouchHeader()}
+      <div className="lg:hidden min-h-screen flex flex-col max-w-2xl mx-auto bg-background sm:border-x-2 sm:border-foreground">
+        {renderMobileHeader()}
         <main
-          className={[
-            "flex-1",
-            // mobile: 16px padding
-            "px-4 pt-4",
-            // tablet: 24px padding, slightly more top breathing room
-            "sm:px-6 sm:pt-6",
-          ].join(" ")}
+          className="flex-1 px-4 pt-4 sm:px-6"
           style={{ paddingBottom: "calc(7rem + env(safe-area-inset-bottom))" }}
         >
           {children}
@@ -102,13 +82,14 @@ export function AppShell({
       </div>
 
       {/* ===================================================================
-          Desktop (≥1025) — sidebar + scrollable main. NO bottom nav.
+          Desktop (≥1024) — sidebar + main content
           =================================================================== */}
       <div
         className="hidden lg:block min-h-screen bg-background"
         style={{ paddingLeft: `${SIDEBAR_W}px` }}
       >
         {fullBleed ? (
+          // Full-bleed: page owns its own padding (Map fills the whole area)
           <main className="min-h-screen">{children}</main>
         ) : (
           <main className="min-h-screen">
@@ -120,26 +101,32 @@ export function AppShell({
   );
 }
 
-/* ---------------- PageHeader (mobile/tablet sticky header content) ---------- */
+/* ---------------- PageHeader ----------------
+   Used by mobile route headers (passed via the `header` prop on AppShell)
+   AND by desktop routes inline as a top-of-content block. */
 type PageHeaderProps = {
+  /** Eyebrow / section label, e.g. "TODAY" */
   eyebrow: string;
+  /** Big title — typically the date or page subject */
   title: string;
+  /** Mono stats / metadata line under the title */
   meta?: ReactNode;
+  /** Right-side action slot (button, badge, etc.) */
   action?: ReactNode;
 };
 
 export function PageHeader({ eyebrow, title, meta, action }: PageHeaderProps) {
   return (
-    <div className="px-4 py-3 sm:px-6 sm:py-4 lg:px-0 lg:py-0">
+    <div className="px-4 py-3 lg:px-0 lg:py-0">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
-          {/* Logo — touch tier only; desktop uses sidebar logo */}
-          <Logo tone="dark" size={36} className="mt-0.5 lg:hidden shrink-0" />
+          {/* Logo — mobile/tablet only; desktop uses the sidebar logo */}
+          <Logo tone="dark" size={36} className="mt-0.5 lg:hidden" />
           <div className="min-w-0">
             <div className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-muted-foreground">
               {eyebrow}
             </div>
-            <h1 className="mt-1 text-2xl sm:text-3xl font-display font-bold tracking-tight leading-tight text-foreground">
+            <h1 className="mt-1 text-2xl font-display font-bold tracking-tight leading-tight text-foreground">
               {title}
             </h1>
             {meta && (
@@ -155,7 +142,10 @@ export function PageHeader({ eyebrow, title, meta, action }: PageHeaderProps) {
   );
 }
 
-/* ---------------- DesktopPageHeader ---------- */
+/* ---------------- DesktopPageHeader ----------------
+   Desktop-specific page header used inside main content area.
+   Eyebrow + big bold title on the left, optional action slot on the right.
+   ----------------------------------------------------------------- */
 export function DesktopPageHeader({
   eyebrow,
   title,
@@ -171,7 +161,7 @@ export function DesktopPageHeader({
         <div className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-muted-foreground">
           {eyebrow}
         </div>
-        <h1 className="mt-1 text-3xl font-display font-bold tracking-tight leading-none text-foreground">
+        <h1 className="mt-1 text-2xl font-display font-bold tracking-tight leading-none text-foreground">
           {title}
         </h1>
       </div>
