@@ -4,6 +4,7 @@ import { Phone, Navigation, ChevronDown, ChevronUp } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Card } from "@/components/ui-brutal";
 import { HouseDetail, type DetailStatus } from "@/components/HouseDetail";
+import { findPinByAddress, setSelectedPin } from "@/components/PersistentMap";
 import { formatMoney } from "@/lib/format";
 import {
   mockLeads,
@@ -162,8 +163,13 @@ function DealsPage() {
     { label: "WON", value: totals.wonTotal, color: "var(--heatmap-5)" },
   ];
 
-  // Tap a deal card → open the read-only detail sheet (NOT the capture form).
-  const openHouse = (card: DealCard) => setSelected(card);
+  // Tap a deal card → open the detail sheet AND highlight + pan the
+  // matching map pin so the desktop right drawer + map stay in sync.
+  const openHouse = (card: DealCard) => {
+    setSelected(card);
+    const pin = findPinByAddress(card.address);
+    if (pin) setSelectedPin(pin);
+  };
 
   const callPhone = (e: React.MouseEvent, phone?: string) => {
     e.stopPropagation();
