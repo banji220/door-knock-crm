@@ -128,6 +128,16 @@
   --popover: var(--card);
   --popover-foreground: var(--foreground);
 
+  /* Surface tiers — used by the new hierarchy system. Hero = card,
+     raised = lighter card for grouped rows, sunken = quiet container. */
+  --surface-hero: oklch(0.93 0.02 72);
+  --surface-raised: oklch(0.95 0.012 72);
+  --surface-sunken: oklch(0.94 0.008 75);
+
+  /* Hairline = a soft warm grey for low-emphasis dividers/borders.
+     Use this for secondary surfaces. Ink (foreground) stays for hero+primary. */
+  --hairline: oklch(0.82 0.02 65);
+
   --primary: oklch(0.50 0.18 38);           /* SATURATED warm brown-amber — this must POP */
   --primary-foreground: oklch(0.97 0.008 75);
 
@@ -160,14 +170,13 @@
   --input: var(--foreground);
   --ring: var(--foreground);
 
-  /* Heatmap gradient — VIBRANT. Punchy yellow → orange → red.
-     Each step is an obvious jump in saturation and hue. */
-  --heatmap-0: oklch(0.92 0.008 250); /* empty — slightly cool light grey so warm cells pop */
-  --heatmap-1: oklch(0.88 0.17 95);   /* low — bright warm yellow */
-  --heatmap-2: oklch(0.78 0.20 75);   /* medium — golden orange */
-  --heatmap-3: oklch(0.68 0.22 50);   /* good — saturated orange */
-  --heatmap-4: oklch(0.58 0.24 35);   /* high — strong red-orange */
-  --heatmap-5: oklch(0.50 0.26 28);   /* max — bold punchy red */
+  /* Heatmap gradient — VIBRANT. Punchy yellow → orange → red. */
+  --heatmap-0: oklch(0.92 0.008 250);
+  --heatmap-1: oklch(0.88 0.17 95);
+  --heatmap-2: oklch(0.78 0.20 75);
+  --heatmap-3: oklch(0.68 0.22 50);
+  --heatmap-4: oklch(0.58 0.24 35);
+  --heatmap-5: oklch(0.50 0.26 28);
 
   --chart-1: var(--heatmap-2);
   --chart-2: var(--heatmap-3);
