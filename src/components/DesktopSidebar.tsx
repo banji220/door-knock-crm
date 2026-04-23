@@ -18,30 +18,37 @@ const items: Item[] = [
 ];
 
 /* =========================================================================
-   DesktopSidebar — visible only on lg+ screens (≥1024px). The mobile
-   BottomNav handles smaller screens. Fixed-width left rail with brand,
-   nav list, and active-state highlighting.
+   DesktopSidebar — 240px fixed dark rail (lg+ only).
+   Layout:
+   - Top: GIRAFFE wordmark + FIELD CRM eyebrow
+   - Middle: nav stack (icon + label + optional badge)
+   - Bottom: avatar + name + sign-out link
+   The sidebar is `bg-foreground text-background` (inverted) and stays
+   pinned to the left edge across every desktop route.
    ========================================================================= */
 export function DesktopSidebar() {
   const { pathname } = useLocation();
 
   return (
-    <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-card border-r-2 border-foreground">
+    <aside
+      className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-60 flex-col bg-foreground text-background"
+      aria-label="Primary navigation"
+    >
       {/* Brand */}
-      <div className="px-5 py-5 border-b-2 border-foreground bg-[var(--amber)] flex items-center gap-3">
-        <Logo tone="dark" size={40} />
+      <div className="px-5 pt-6 pb-5 flex items-center gap-3">
+        <Logo tone="light" size={36} />
         <div className="min-w-0">
-          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-foreground/70">
-            Field CRM
+          <div className="font-mono font-bold uppercase tracking-[0.3em] text-sm leading-none text-background">
+            GIRAFFE
           </div>
-          <div className="mt-0.5 text-2xl font-display font-bold uppercase tracking-tight leading-none">
-            Giraffe
+          <div className="mt-1 text-[10px] font-mono uppercase tracking-wider text-background/50 leading-none">
+            Field CRM
           </div>
         </div>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 px-2 py-4 overflow-y-auto">
         <ul className="space-y-1">
           {items.map(({ to, label, icon: Icon, badge }) => {
             const active = pathname === to;
@@ -49,26 +56,34 @@ export function DesktopSidebar() {
               <li key={to}>
                 <Link
                   to={to}
-                  className={`press-brutal flex items-center gap-3 px-3 py-3 border-2 ${
+                  className={[
+                    "press-brutal flex items-center gap-3 px-4 py-3 text-sm font-mono font-bold uppercase tracking-wider relative",
                     active
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-transparent hover:border-foreground hover:bg-muted text-foreground"
-                  }`}
+                      ? "bg-background/15 text-background"
+                      : "text-background/70 hover:bg-background/10 hover:text-background",
+                  ].join(" ")}
+                  aria-current={active ? "page" : undefined}
                 >
+                  {/* Active left bar */}
+                  {active && (
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary"
+                    />
+                  )}
                   <Icon
                     className="size-5 shrink-0"
                     strokeWidth={active ? 2.75 : 2.25}
                   />
-                  <span className="font-mono font-bold uppercase tracking-wider text-sm flex-1">
-                    {label}
-                  </span>
+                  <span className="flex-1">{label}</span>
                   {badge !== undefined && badge > 0 && (
                     <span
-                      className={`min-w-[22px] h-[22px] px-1.5 border-2 border-foreground font-mono font-bold text-[10px] flex items-center justify-center leading-none tabular-nums ${
+                      className={[
+                        "min-w-[22px] h-[22px] px-1.5 border-2 font-mono font-bold text-[10px] flex items-center justify-center leading-none tabular-nums",
                         active
-                          ? "bg-background text-foreground"
-                          : "bg-destructive text-destructive-foreground"
-                      }`}
+                          ? "border-background bg-background text-foreground"
+                          : "border-background/40 bg-transparent text-background",
+                      ].join(" ")}
                       aria-label={`${badge} pending`}
                     >
                       {badge}
@@ -81,19 +96,22 @@ export function DesktopSidebar() {
         </ul>
       </nav>
 
-      {/* Footer */}
-      <div className="px-4 py-3 border-t-2 border-foreground">
+      {/* Footer — user + sign out */}
+      <div className="px-4 py-4 border-t border-background/10">
         <div className="flex items-center gap-3">
-          <div className="size-9 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-sm">
+          <div className="size-10 border-2 border-background/20 bg-background/10 flex items-center justify-center font-mono font-bold text-xs text-background shrink-0">
             HG
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-xs font-mono font-bold uppercase tracking-wider truncate">
+            <div className="text-xs font-mono font-bold uppercase tracking-wider truncate text-background">
               Holy Giraffe
             </div>
-            <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground truncate">
-              Pro
-            </div>
+            <button
+              type="button"
+              className="mt-0.5 text-[10px] font-mono uppercase tracking-wider text-background/50 hover:text-background"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </div>
