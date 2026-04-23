@@ -1,14 +1,6 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation, useRouterState } from "@tanstack/react-router";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Zap,
-  Target,
-  Map as MapIcon,
-  Users,
-  User,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { PersistentMap } from "./PersistentMap";
