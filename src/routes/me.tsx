@@ -112,13 +112,12 @@ function MePage() {
 
         {/* Two-column grid: data column (1fr) + action column (380px) */}
         <section className="grid grid-cols-[1fr_380px] gap-6">
-          {/* === LEFT: data column === */}
+          {/* === LEFT: hero column (heatmap only) === */}
           <div className="min-w-0 flex flex-col gap-4">
             <ContributionHeatmap />
-            <MomentumMeter />
           </div>
 
-          {/* === RIGHT: action column === */}
+          {/* === RIGHT: action/stats column === */}
           <div className="flex flex-col gap-4">
             <DailyMissionCard
               current={14}
@@ -134,6 +133,7 @@ function MePage() {
               currentStreak={streaks.current}
               longestStreak={streaks.best}
             />
+            <MomentumMeter />
             <QuickLogCard initialCount={STATS.knocks} />
             <BadgesPanel />
             <GoogleCalendarCard />
