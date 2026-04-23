@@ -9,14 +9,22 @@ const OUTCOMES: KnockOutcome[] = [
   "booked", "quoted", "callback", "no-answer", "not-interested",
 ];
 
-type Props = {
+type BodyProps = {
   pin: HousePin;
-  onClose: () => void;
   onLogOutcome: (o: KnockOutcome) => void;
   onQuote: () => void;
 };
 
-export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
+type Props = BodyProps & {
+  onClose: () => void;
+};
+
+/* ============================================================
+   HouseCardBody — the inner detail content (header, money,
+   actions, outcomes, timeline). Used by both the mobile
+   bottom-sheet modal and the desktop right-drawer panel.
+   ============================================================ */
+export function HouseCardBody({ pin, onLogOutcome, onQuote }: BodyProps) {
   const meta = OUTCOME_META[pin.outcome];
 
   const timeline = useMemo(() => {
@@ -55,8 +63,154 @@ export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
   const moneyLabel = pin.ltv ? "Lifetime Value" : pin.quotePrice ? "Quote" : "Anchor";
 
   return (
+    <div className="p-4 space-y-4">
+      {/* Contact + status */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="font-mono font-bold text-base truncate">
+            {pin.leadName ?? "No contact yet"}
+          </div>
+          {pin.phone && (
+            <div className="text-xs font-mono text-muted-foreground">{pin.phone}</div>
+          )}
+        </div>
+        <Badge
+          variant={
+            pin.outcome === "booked" ? "success"
+              : pin.outcome === "quoted" ? "accent"
+                : pin.outcome === "not-interested" ? "destructive"
+                  : "default"
+          }
+        >
+          {meta.full}
+        </Badge>
+      </div>
+
+      {/* Money line */}
+      {money !== undefined && (
+        <div className="border-2 border-foreground bg-[var(--amber)] px-4 py-3 flex items-baseline justify-between">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">
+            {moneyLabel}
+          </div>
+          <div className="text-3xl font-mono font-bold leading-none">
+            {formatMoney(money)}
+          </div>
+        </div>
+      )}
+
+      {/* NBA */}
+      <Button variant="primary" block onClick={nba.action} className="py-4 text-base">
+        {nba.label} →
+      </Button>
+
+      {/* Quick actions */}
+      <div className="grid grid-cols-3 gap-2">
+        <QuickAction icon={<Phone className="size-5" strokeWidth={2.5} />} label="Call" href={pin.phone ? `tel:${pin.phone}` : undefined} />
+        <QuickAction icon={<MessageSquare className="size-5" strokeWidth={2.5} />} label="Text" href={pin.phone ? `sms:${pin.phone}` : undefined} />
+        <QuickAction icon={<Navigation className="size-5" strokeWidth={2.5} />} label="Nav" href={`https://www.google.com/maps/dir/?api=1&destination=${pin.lat},${pin.lng}`} />
+      </div>
+
+      {/* Outcome grid */}
+      <div>
+        <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+          Log Outcome
+        </div>
+        <div className="grid grid-cols-5 gap-2">
+          {OUTCOMES.map((o) => {
+            const m = OUTCOME_META[o];
+            return (
+              <button
+                key={o}
+                onClick={() => onLogOutcome(o)}
+                className="press-brutal aspect-square border-2 border-foreground flex flex-col items-center justify-center gap-0.5"
+                style={{ background: m.color }}
+                title={m.full}
+              >
+                <span className="font-mono font-bold text-base leading-none">
+                  {m.label}
+                </span>
+                <span className="font-mono font-bold text-[8px] uppercase tracking-wider opacity-80 leading-none">
+                  {o.split("-")[0]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div>
+        <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+          Timeline
+        </div>
+        {timeline.length === 0 ? (
+          <Card className="text-xs font-mono text-muted-foreground text-center py-3">
+            No history yet.
+          </Card>
+        ) : (
+          <div className="space-y-1.5">
+            {timeline.map((t) => (
+              <div
+                key={t.id}
+                className="border-2 border-foreground bg-card p-2.5 flex items-start gap-2"
+              >
+                <div
+                  className="size-6 border-2 border-foreground flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
+                  style={{
+                    background:
+                      t.type === "knock"
+                        ? OUTCOME_META[t.outcome].color
+                        : "var(--heatmap-5)",
+                    color: t.type === "job" ? "var(--background)" : undefined,
+                  }}
+                >
+                  {t.type === "knock" ? OUTCOME_META[t.outcome].label : "J"}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono font-bold text-xs uppercase">
+                    {t.type === "knock"
+                      ? OUTCOME_META[t.outcome].full
+                      : `Job · ${t.status} · ${formatMoney(t.price)}`}
+                  </div>
+                  {t.type === "knock" && t.notes && (
+                    <div className="text-xs font-mono text-muted-foreground truncate">
+                      {t.notes}
+                    </div>
+                  )}
+                  <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
+                    {new Date(t.timestamp).toLocaleString([], {
+                      month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Bottom buried actions */}
+      <div className="flex items-center justify-between pt-2 border-t-2 border-foreground/20">
+        <button className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-destructive">
+          Mark as Avoid
+        </button>
+        <button className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-destructive">
+          Remove Pin
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   HouseCard — mobile/tablet fullscreen bottom-sheet modal.
+   On desktop the right-side detail drawer renders HouseCardBody
+   directly inside AppShell instead of using this overlay.
+   ============================================================ */
+export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
+  return (
     <div
-      className="fixed inset-0 z-40 bg-foreground/40 flex items-end animate-in fade-in duration-150"
+      className="fixed inset-0 z-40 bg-foreground/40 flex items-end animate-in fade-in duration-150 lg:hidden"
       onClick={onClose}
     >
       <div
@@ -81,142 +235,7 @@ export function HouseCard({ pin, onClose, onLogOutcome, onQuote }: Props) {
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
-          {/* Contact + status */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <div className="font-mono font-bold text-base truncate">
-                {pin.leadName ?? "No contact yet"}
-              </div>
-              {pin.phone && (
-                <div className="text-xs font-mono text-muted-foreground">{pin.phone}</div>
-              )}
-            </div>
-            <Badge
-              variant={
-                pin.outcome === "booked" ? "success"
-                  : pin.outcome === "quoted" ? "accent"
-                    : pin.outcome === "not-interested" ? "destructive"
-                      : "default"
-              }
-            >
-              {meta.full}
-            </Badge>
-          </div>
-
-          {/* Money line */}
-          {money !== undefined && (
-            <div className="border-2 border-foreground bg-[var(--amber)] px-4 py-3 flex items-baseline justify-between">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]">
-                {moneyLabel}
-              </div>
-              <div className="text-3xl font-mono font-bold leading-none">
-                {formatMoney(money)}
-              </div>
-            </div>
-          )}
-
-          {/* NBA */}
-          <Button variant="primary" block onClick={nba.action} className="py-4 text-base">
-            {nba.label} →
-          </Button>
-
-          {/* Quick actions */}
-          <div className="grid grid-cols-3 gap-2">
-            <QuickAction icon={<Phone className="size-5" strokeWidth={2.5} />} label="Call" href={pin.phone ? `tel:${pin.phone}` : undefined} />
-            <QuickAction icon={<MessageSquare className="size-5" strokeWidth={2.5} />} label="Text" href={pin.phone ? `sms:${pin.phone}` : undefined} />
-            <QuickAction icon={<Navigation className="size-5" strokeWidth={2.5} />} label="Nav" href={`https://www.google.com/maps/dir/?api=1&destination=${pin.lat},${pin.lng}`} />
-          </div>
-
-          {/* Outcome grid */}
-          <div>
-            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-              Log Outcome
-            </div>
-            <div className="grid grid-cols-5 gap-2">
-              {OUTCOMES.map((o) => {
-                const m = OUTCOME_META[o];
-                return (
-                  <button
-                    key={o}
-                    onClick={() => onLogOutcome(o)}
-                    className="press-brutal aspect-square border-2 border-foreground flex flex-col items-center justify-center gap-0.5"
-                    style={{ background: m.color }}
-                    title={m.full}
-                  >
-                    <span className="font-mono font-bold text-base leading-none">
-                      {m.label}
-                    </span>
-                    <span className="font-mono font-bold text-[8px] uppercase tracking-wider opacity-80 leading-none">
-                      {o.split("-")[0]}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Timeline */}
-          <div>
-            <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-              Timeline
-            </div>
-            {timeline.length === 0 ? (
-              <Card className="text-xs font-mono text-muted-foreground text-center py-3">
-                No history yet.
-              </Card>
-            ) : (
-              <div className="space-y-1.5">
-                {timeline.map((t) => (
-                  <div
-                    key={t.id}
-                    className="border-2 border-foreground bg-card p-2.5 flex items-start gap-2"
-                  >
-                    <div
-                      className="size-6 border-2 border-foreground flex items-center justify-center text-[10px] font-mono font-bold shrink-0"
-                      style={{
-                        background:
-                          t.type === "knock"
-                            ? OUTCOME_META[t.outcome].color
-                            : "var(--heatmap-5)",
-                        color: t.type === "job" ? "var(--background)" : undefined,
-                      }}
-                    >
-                      {t.type === "knock" ? OUTCOME_META[t.outcome].label : "J"}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="font-mono font-bold text-xs uppercase">
-                        {t.type === "knock"
-                          ? OUTCOME_META[t.outcome].full
-                          : `Job · ${t.status} · ${formatMoney(t.price)}`}
-                      </div>
-                      {t.type === "knock" && t.notes && (
-                        <div className="text-xs font-mono text-muted-foreground truncate">
-                          {t.notes}
-                        </div>
-                      )}
-                      <div className="text-[10px] font-mono text-muted-foreground mt-0.5">
-                        {new Date(t.timestamp).toLocaleString([], {
-                          month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Bottom buried actions */}
-          <div className="flex items-center justify-between pt-2 border-t-2 border-foreground/20">
-            <button className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-destructive">
-              Mark as Avoid
-            </button>
-            <button className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-destructive">
-              Remove Pin
-            </button>
-          </div>
-        </div>
+        <HouseCardBody pin={pin} onLogOutcome={onLogOutcome} onQuote={onQuote} />
       </div>
     </div>
   );
