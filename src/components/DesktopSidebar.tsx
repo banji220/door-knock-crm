@@ -1,5 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { Zap, Target, Map as MapIcon, Users, User } from "lucide-react";
+import { Logo } from "./Logo";
 
 type Item = {
   to: "/" | "/deals" | "/map" | "/clients" | "/me";
@@ -27,12 +28,15 @@ export function DesktopSidebar() {
   return (
     <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-64 flex-col bg-card border-r-2 border-foreground">
       {/* Brand */}
-      <div className="px-5 py-5 border-b-2 border-foreground bg-[var(--amber)]">
-        <div className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-foreground/70">
-          Field CRM
-        </div>
-        <div className="mt-1 text-2xl font-display font-bold uppercase tracking-tight leading-none">
-          Giraffe
+      <div className="px-5 py-5 border-b-2 border-foreground bg-[var(--amber)] flex items-center gap-3">
+        <Logo tone="dark" size={40} />
+        <div className="min-w-0">
+          <div className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-foreground/70">
+            Field CRM
+          </div>
+          <div className="mt-0.5 text-2xl font-display font-bold uppercase tracking-tight leading-none">
+            Giraffe
+          </div>
         </div>
       </div>
 
