@@ -180,10 +180,11 @@ export function PersistentMap({
         aria-label="Territory map"
       />
 
-      {/* Map controls — top-right of the map area, just below the top bar. */}
+      {/* Map controls — top-right of the map area, just below the top bar.
+          Slide inward when the right detail drawer is open. */}
       <div
-        className="fixed z-20 flex flex-col gap-2"
-        style={{ top: `${topInset + 16}px`, right: "1rem" }}
+        className="fixed z-20 flex flex-col gap-2 transition-[right] duration-200 ease-out"
+        style={{ top: `${topInset + 16}px`, right: `${rightInset + 16}px` }}
       >
         <button
           type="button"
