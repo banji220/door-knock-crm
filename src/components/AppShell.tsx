@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { Logo } from "./Logo";
 
 type AppShellProps = {
   title?: string;
@@ -118,18 +119,22 @@ export function PageHeader({ eyebrow, title, meta, action }: PageHeaderProps) {
   return (
     <div className="px-4 py-3 lg:px-0 lg:py-0">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-muted-foreground">
-            {eyebrow}
+        <div className="flex items-start gap-3 min-w-0">
+          {/* Logo — mobile/tablet only; desktop uses the sidebar logo */}
+          <Logo tone="dark" size={36} className="mt-0.5 lg:hidden" />
+          <div className="min-w-0">
+            <div className="text-xs font-mono font-bold uppercase tracking-[0.3em] text-muted-foreground">
+              {eyebrow}
+            </div>
+            <h1 className="mt-1 text-2xl font-display font-bold tracking-tight leading-tight text-foreground">
+              {title}
+            </h1>
+            {meta && (
+              <p className="mt-1 text-xs font-mono text-muted-foreground">
+                {meta}
+              </p>
+            )}
           </div>
-          <h1 className="mt-1 text-2xl font-display font-bold tracking-tight leading-tight text-foreground">
-            {title}
-          </h1>
-          {meta && (
-            <p className="mt-1 text-xs font-mono text-muted-foreground">
-              {meta}
-            </p>
-          )}
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
