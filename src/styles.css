@@ -69,6 +69,32 @@
   --font-sans: "Space Grotesk", system-ui, sans-serif;
   --font-mono: "Space Mono", ui-monospace, monospace;
 
+  /* ───────────────── Responsive system ─────────────────
+     Strict 3-tier breakpoint scale used app-wide.
+     Mobile  : 0    – 640px   (bottom nav, single column)
+     Tablet  : 641  – 1024px  (bottom nav, 2-col hybrid)
+     Desktop : 1025+          (sidebar, multi-column dashboard)
+
+     Tailwind v4 reads --breakpoint-* to redefine the sm/md/lg/xl utilities.
+     We pin them so component classes (sm:..., lg:...) snap to OUR tiers. */
+  --breakpoint-sm: 641px;   /* tablet starts */
+  --breakpoint-md: 768px;   /* tablet mid    */
+  --breakpoint-lg: 1025px;  /* desktop starts */
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* Container widths per breakpoint — single source of truth */
+  --container-mobile-pad: 1rem;     /* 16px gutters */
+  --container-tablet-max: 720px;
+  --container-tablet-pad: 1.5rem;
+  --container-desktop-max: 1400px;
+  --container-desktop-pad: 2.5rem;
+
+  /* Spacing scale (page-level rhythm) */
+  --space-stack-mobile: 1.25rem;
+  --space-stack-tablet: 1.5rem;
+  --space-stack-desktop: 1.5rem;
+
   /* No elevation. Shadows neutralized everywhere. */
   --shadow-2xs: 0 0 #0000;
   --shadow-xs: 0 0 #0000;
