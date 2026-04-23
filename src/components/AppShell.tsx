@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useRouterState } from "@tanstack/react-router";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { Logo } from "./Logo";
 
 type AppShellProps = {
   title?: string;
