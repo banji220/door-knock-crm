@@ -120,6 +120,7 @@ function MePage() {
 
           {/* === RIGHT COLUMN: stacked action/stats cards === */}
           <div className="space-y-4">
+            <QuickLogCard initialCount={STATS.knocks} />
             <DailyMissionCard
               current={14}
               target={30}
@@ -135,7 +136,6 @@ function MePage() {
               longestStreak={streaks.best}
             />
             <MomentumMeter />
-            <QuickLogCard initialCount={STATS.knocks} />
             <BadgesPanel />
           </div>
         </div>
@@ -151,6 +151,8 @@ function MePage() {
           MOBILE / TABLET — single stacked column (<lg)
           ============================================================ */}
       <div className="lg:hidden space-y-6">
+        <QuickLogCard initialCount={STATS.knocks} />
+
         <div>
           <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
             Today
@@ -201,8 +203,6 @@ function MePage() {
         />
 
         <MomentumMeter />
-
-        <QuickLogCard initialCount={STATS.knocks} />
 
         <BadgesPanel />
 
