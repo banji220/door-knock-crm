@@ -28,6 +28,7 @@ type AppShellProps = {
 const TOPBAR_H = 56;
 const PANEL_W = 380;
 const PANEL_W_COLLAPSED = 48;
+const RIGHT_PANEL_W = 420;
 
 /* Field routes get the persistent map + floating panel treatment on desktop.
    Me page is its own wide dashboard (no map behind it). */
