@@ -1,11 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, DesktopPageHeader } from "@/components/AppShell";
 import { Card, Input, SectionHeader } from "@/components/ui-brutal";
 import { mockCustomers, type Customer } from "@/lib/mock-data";
 import { Search, Phone, Star, Clock } from "lucide-react";
 import { HouseDetail } from "@/components/HouseDetail";
-import { findPinByAddress, setSelectedPin } from "@/components/PersistentMap";
 import { formatMoney } from "@/lib/format";
 
 export const Route = createFileRoute("/clients")({
@@ -13,7 +12,7 @@ export const Route = createFileRoute("/clients")({
 });
 
 const MS_PER_DAY = 86_400_000;
-const RECLEAN_WINDOW_DAYS = 7; // "approaching" = within 7 days OR overdue
+const RECLEAN_WINDOW_DAYS = 7;
 
 function daysFromNow(iso: string) {
   return Math.round((new Date(iso).getTime() - Date.now()) / MS_PER_DAY);
@@ -60,47 +59,61 @@ function ClientsPage() {
     [q],
   );
 
-  // Tap a customer row → open the detail sheet AND highlight + pan the
-  // matching map pin so the desktop right drawer + map stay in sync.
   const openCustomer = (c: Customer) => {
     setSelected(c);
-    const pin = findPinByAddress(c.address);
-    if (pin) setSelectedPin(pin);
   };
 
-  return (
-    <AppShell title="Clients" subtitle={`${totals.count} customers`}>
-      {/* Hero — total LTV */}
-      <div className="border-2 border-foreground bg-card p-5 mb-5">
-        <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-          Lifetime Revenue
-        </div>
-        <div
-          className="text-6xl font-mono font-bold leading-none tabular-nums"
-          style={{ color: "var(--success)" }}
-        >
-          {formatMoney(totals.ltv)}
-        </div>
-        <div className="mt-2 text-xs font-mono text-muted-foreground">
-          across <span className="font-bold text-foreground">{totals.count}</span> customers
-        </div>
+  /* ----- Reusable sub-renderers ----- */
+  const ltvHero = (
+    <div className="border-2 border-foreground bg-card p-5">
+      <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+        Lifetime Revenue
       </div>
-
-      {/* Search */}
-      <div className="relative mb-5">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none z-10" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value.slice(0, 100))}
-          placeholder="Search name or address"
-          maxLength={100}
-          className="pl-11 text-base"
-        />
+      <div
+        className="text-5xl lg:text-6xl font-mono font-bold leading-none tabular-nums text-primary"
+      >
+        {formatMoney(totals.ltv)}
       </div>
+      <div className="mt-2 text-xs font-mono text-muted-foreground">
+        across <span className="font-bold text-foreground">{totals.count}</span> customers
+      </div>
+    </div>
+  );
 
-      {/* Due for reclean */}
+  const searchInput = (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground pointer-events-none z-10" />
+      <Input
+        value={q}
+        onChange={(e) => setQ(e.target.value.slice(0, 100))}
+        placeholder="Search name or address"
+        maxLength={100}
+        className="pl-11 text-base"
+      />
+    </div>
+  );
+
+  const allCustomers = (
+    <>
+      <SectionHeader count={all.length}>All Customers</SectionHeader>
+      <ul className="space-y-2">
+        {all.length === 0 ? (
+          <Card as="li" className="border-dashed p-5 text-center">
+            <p className="font-mono font-bold uppercase">No matches</p>
+          </Card>
+        ) : (
+          all.map((c) => (
+            <CustomerRow key={c.id} c={c} onClick={() => openCustomer(c)} />
+          ))
+        )}
+      </ul>
+    </>
+  );
+
+  const recleanList = (
+    <>
       <SectionHeader count={dueForReclean.length}>Due for Reclean</SectionHeader>
-      <ul className="space-y-2 mb-5">
+      <ul className="space-y-2">
         {dueForReclean.length === 0 ? (
           <Card as="li" className="border-dashed p-5 text-center">
             <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
@@ -120,10 +133,13 @@ function ClientsPage() {
           ))
         )}
       </ul>
+    </>
+  );
 
-      {/* Review not asked */}
+  const reviewList = (
+    <>
       <SectionHeader count={reviewNotAsked.length}>Review Not Asked</SectionHeader>
-      <ul className="space-y-2 mb-5">
+      <ul className="space-y-2">
         {reviewNotAsked.length === 0 ? (
           <Card as="li" className="border-dashed p-5 text-center">
             <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
@@ -146,20 +162,43 @@ function ClientsPage() {
           ))
         )}
       </ul>
+    </>
+  );
 
-      {/* All customers */}
-      <SectionHeader count={all.length}>All Customers</SectionHeader>
-      <ul className="space-y-2">
-        {all.length === 0 ? (
-          <Card as="li" className="border-dashed p-5 text-center">
-            <p className="font-mono font-bold uppercase">No matches</p>
-          </Card>
-        ) : (
-          all.map((c) => (
-            <CustomerRow key={c.id} c={c} onClick={() => openCustomer(c)} />
-          ))
-        )}
-      </ul>
+  return (
+    <AppShell title="Clients" subtitle={`${totals.count} customers`}>
+      {/* ============================================================
+          DESKTOP — two-column layout (≥1024px)
+          ============================================================ */}
+      <div className="hidden lg:block">
+        <DesktopPageHeader eyebrow="Clients" title="All Customers" />
+
+        <section className="grid grid-cols-[1fr_380px] gap-6">
+          {/* === LEFT: hero + searchable list === */}
+          <div className="min-w-0 flex flex-col gap-5">
+            {ltvHero}
+            {searchInput}
+            {allCustomers}
+          </div>
+
+          {/* === RIGHT: action items === */}
+          <div className="flex flex-col gap-6">
+            <div>{recleanList}</div>
+            <div>{reviewList}</div>
+          </div>
+        </section>
+      </div>
+
+      {/* ============================================================
+          MOBILE / TABLET — stacked column (<lg)
+          ============================================================ */}
+      <div className="lg:hidden">
+        <div className="mb-5">{ltvHero}</div>
+        <div className="mb-5">{searchInput}</div>
+        <div className="mb-5">{recleanList}</div>
+        <div className="mb-5">{reviewList}</div>
+        {allCustomers}
+      </div>
 
       {selected && (
         <HouseDetail

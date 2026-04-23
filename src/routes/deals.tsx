@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Phone, Navigation, ChevronDown, ChevronUp } from "lucide-react";
-import { AppShell } from "@/components/AppShell";
+import { AppShell, DesktopPageHeader } from "@/components/AppShell";
 import { Card } from "@/components/ui-brutal";
 import { HouseDetail, type DetailStatus } from "@/components/HouseDetail";
-import { findPinByAddress, setSelectedPin } from "@/components/PersistentMap";
 import { formatMoney } from "@/lib/format";
 import {
   mockLeads,
@@ -74,7 +73,6 @@ function DealsPage() {
       const stage: Stage = isWon ? "WON" : isQuoted ? "QUOTED" : "LEAD";
       const price = j?.price ?? q?.price ?? 0;
 
-      // urgency
       const followDays = follow ? daysAgo(follow.dueDate) : 0;
       const overdue = follow && new Date(follow.dueDate).getTime() < Date.now();
       const expiring = isQuoted && days >= 5;
@@ -163,12 +161,8 @@ function DealsPage() {
     { label: "WON", value: totals.wonTotal, color: "var(--heatmap-5)" },
   ];
 
-  // Tap a deal card → open the detail sheet AND highlight + pan the
-  // matching map pin so the desktop right drawer + map stay in sync.
   const openHouse = (card: DealCard) => {
     setSelected(card);
-    const pin = findPinByAddress(card.address);
-    if (pin) setSelectedPin(pin);
   };
 
   const callPhone = (e: React.MouseEvent, phone?: string) => {
@@ -183,151 +177,218 @@ function DealsPage() {
     );
   };
 
+  /* ----- Shared sub-renderers ----- */
+  const moneyBar = (
+    <section>
+      <div className="flex w-full h-10 border-2 border-foreground overflow-hidden">
+        {segs.map((s, i) => {
+          const pct = (s.value / grandTotal) * 100;
+          if (pct === 0) return null;
+          return (
+            <div
+              key={s.label}
+              style={{ width: `${pct}%`, background: s.color }}
+              className={i > 0 ? "border-l-2 border-foreground" : ""}
+            />
+          );
+        })}
+      </div>
+      <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+        {segs.map((s) => (
+          <div
+            key={s.label}
+            className="flex items-center gap-1.5 text-xs font-mono font-bold"
+          >
+            <span
+              className="inline-block w-3 h-3 border-2 border-foreground"
+              style={{ background: s.color }}
+            />
+            <span className="uppercase tracking-wider">
+              {s.label} {formatMoney(s.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+
+  const hottestSection = (
+    <Section
+      label="Hottest"
+      count={hottest.length}
+      total={hottest.reduce((s, c) => s + c.price, 0)}
+    >
+      {hottest.length === 0 ? (
+        <Card className="border-dashed p-6 text-center">
+          <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
+            Pipeline is clean. Go knock.
+          </p>
+        </Card>
+      ) : (
+        <ul className="space-y-2">
+          {hottest.map((c) => (
+            <DealRow
+              key={c.id}
+              card={c}
+              onOpen={() => openHouse(c)}
+              onCall={(e) => callPhone(e, c.phone)}
+              onNav={(e) => navigateMaps(e, c.address)}
+            />
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+
+  const pipelineSection = (
+    <Section
+      label="Pipeline"
+      count={pipeline.length}
+      total={pipeline.reduce((s, c) => s + c.price, 0)}
+    >
+      {pipeline.length === 0 ? (
+        <Card className="border-dashed p-6 text-center">
+          <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
+            No working deals
+          </p>
+        </Card>
+      ) : (
+        <ul className="space-y-2">
+          {pipeline.map((c) => (
+            <DealRow
+              key={c.id}
+              card={c}
+              subLabel={
+                c.stage === "QUOTED"
+                  ? `Quoted ${timeAgoLabel(c.daysSince)}`
+                  : `Lead captured ${timeAgoLabel(c.daysSince)}`
+              }
+              onOpen={() => openHouse(c)}
+              onCall={(e) => callPhone(e, c.phone)}
+              onNav={(e) => navigateMaps(e, c.address)}
+            />
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+
+  const wonSection = (
+    <section>
+      <button
+        type="button"
+        onClick={() => setWonOpen((v) => !v)}
+        className="press-brutal w-full flex items-center justify-between border-2 border-foreground bg-card px-3 py-2"
+      >
+        <div className="flex items-baseline gap-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-[0.2em]">
+            Won
+          </span>
+          <span className="text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 border-2 border-foreground bg-background">
+            {won.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="font-mono font-bold text-sm tabular-nums">
+            {formatMoney(won.reduce((s, c) => s + c.price, 0))}
+          </span>
+          {wonOpen ? (
+            <ChevronUp className="w-4 h-4" strokeWidth={3} />
+          ) : (
+            <ChevronDown className="w-4 h-4" strokeWidth={3} />
+          )}
+        </div>
+      </button>
+
+      {wonOpen && (
+        <ul className="space-y-2 mt-2">
+          {won.length === 0 ? (
+            <Card className="border-dashed p-6 text-center">
+              <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
+                No recent closes
+              </p>
+            </Card>
+          ) : (
+            won.map((c) => (
+              <DealRow
+                key={c.id}
+                card={c}
+                subLabel={`Won ${timeAgoLabel(c.daysSince)}`}
+                onOpen={() => openHouse(c)}
+                onCall={(e) => callPhone(e, c.phone)}
+                onNav={(e) => navigateMaps(e, c.address)}
+              />
+            ))
+          )}
+        </ul>
+      )}
+    </section>
+  );
+
+  const totalPipelineValue = totals.leadsTotal + totals.quotedTotal;
+  const dealCount = hottest.length + pipeline.length;
+  const avgDeal = dealCount > 0 ? Math.round(totalPipelineValue / dealCount) : 0;
+
   return (
     <AppShell title="Deals" subtitle={`Pipeline ${formatMoney(totals.quotedTotal)} · Won ${formatMoney(totals.wonTotal)}`}>
-      <div className="space-y-5">
-        {/* Money Bar */}
-        <section>
-          <div className="flex w-full h-10 border-2 border-foreground overflow-hidden">
-            {segs.map((s, i) => {
-              const pct = (s.value / grandTotal) * 100;
-              if (pct === 0) return null;
-              return (
-                <div
-                  key={s.label}
-                  style={{ width: `${pct}%`, background: s.color }}
-                  className={i > 0 ? "border-l-2 border-foreground" : ""}
-                />
-              );
-            })}
+      {/* ============================================================
+          DESKTOP — two-column layout (≥1024px)
+          ============================================================ */}
+      <div className="hidden lg:block">
+        <DesktopPageHeader
+          eyebrow="Deals"
+          title="Pipeline"
+        />
+
+        <section className="grid grid-cols-[1fr_380px] gap-6">
+          {/* === LEFT: pipeline column === */}
+          <div className="min-w-0 flex flex-col gap-6">
+            {moneyBar}
+            {hottestSection}
+            {pipelineSection}
           </div>
-          <div className="mt-2 flex items-center justify-between gap-2">
-            {segs.map((s) => (
-              <div
-                key={s.label}
-                className="flex items-center gap-1.5 text-xs font-mono font-bold"
-              >
-                <span
-                  className="inline-block w-3 h-3 border-2 border-foreground"
-                  style={{ background: s.color }}
-                />
-                <span className="uppercase tracking-wider">
-                  {s.label} {formatMoney(s.value)}
-                </span>
+
+          {/* === RIGHT: closed + stats column === */}
+          <div className="flex flex-col gap-4">
+            <div className="border-2 border-foreground bg-card p-4">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Pipeline Value
               </div>
-            ))}
+              <div className="mt-1 text-3xl font-mono font-bold tabular-nums">
+                {formatMoney(totalPipelineValue)}
+              </div>
+            </div>
+            <div className="border-2 border-foreground bg-card p-4">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Average Deal
+              </div>
+              <div className="mt-1 text-3xl font-mono font-bold tabular-nums">
+                {formatMoney(avgDeal)}
+              </div>
+            </div>
+            <div className="border-2 border-foreground bg-card p-4">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Won This Month
+              </div>
+              <div className="mt-1 text-3xl font-mono font-bold text-primary tabular-nums">
+                {formatMoney(totals.wonTotal)}
+              </div>
+            </div>
+            {wonSection}
           </div>
         </section>
+      </div>
 
-        {/* HOTTEST */}
-        <Section
-          label="Hottest"
-          count={hottest.length}
-          total={hottest.reduce((s, c) => s + c.price, 0)}
-        >
-          {hottest.length === 0 ? (
-            <Card className="border-dashed p-6 text-center">
-              <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
-                Pipeline is clean. Go knock.
-              </p>
-            </Card>
-          ) : (
-            <ul className="space-y-2">
-              {hottest.map((c) => (
-                <DealRow
-                  key={c.id}
-                  card={c}
-                  onOpen={() => openHouse(c)}
-                  onCall={(e) => callPhone(e, c.phone)}
-                  onNav={(e) => navigateMaps(e, c.address)}
-                />
-              ))}
-            </ul>
-          )}
-        </Section>
-
-        {/* PIPELINE */}
-        <Section
-          label="Pipeline"
-          count={pipeline.length}
-          total={pipeline.reduce((s, c) => s + c.price, 0)}
-        >
-          {pipeline.length === 0 ? (
-            <Card className="border-dashed p-6 text-center">
-              <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
-                No working deals
-              </p>
-            </Card>
-          ) : (
-            <ul className="space-y-2">
-              {pipeline.map((c) => (
-                <DealRow
-                  key={c.id}
-                  card={c}
-                  subLabel={
-                    c.stage === "QUOTED"
-                      ? `Quoted ${timeAgoLabel(c.daysSince)}`
-                      : `Lead captured ${timeAgoLabel(c.daysSince)}`
-                  }
-                  onOpen={() => openHouse(c)}
-                  onCall={(e) => callPhone(e, c.phone)}
-                  onNav={(e) => navigateMaps(e, c.address)}
-                />
-              ))}
-            </ul>
-          )}
-        </Section>
-
-        {/* WON — collapsible */}
-        <section>
-          <button
-            type="button"
-            onClick={() => setWonOpen((v) => !v)}
-            className="press-brutal w-full flex items-center justify-between border-2 border-foreground bg-card px-3 py-2"
-          >
-            <div className="flex items-baseline gap-2">
-              <span className="text-xs font-mono font-bold uppercase tracking-[0.2em]">
-                Won
-              </span>
-              <span className="text-xs font-mono font-bold uppercase tracking-wider px-2 py-0.5 border-2 border-foreground bg-background">
-                {won.length}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono font-bold text-sm tabular-nums">
-                {formatMoney(won.reduce((s, c) => s + c.price, 0))}
-              </span>
-              {wonOpen ? (
-                <ChevronUp className="w-4 h-4" strokeWidth={3} />
-              ) : (
-                <ChevronDown className="w-4 h-4" strokeWidth={3} />
-              )}
-            </div>
-          </button>
-
-          {wonOpen && (
-            <ul className="space-y-2 mt-2">
-              {won.length === 0 ? (
-                <Card className="border-dashed p-6 text-center">
-                  <p className="font-mono font-bold uppercase text-xs text-muted-foreground">
-                    No recent closes
-                  </p>
-                </Card>
-              ) : (
-                won.map((c) => (
-                  <DealRow
-                    key={c.id}
-                    card={c}
-                    subLabel={`Won ${timeAgoLabel(c.daysSince)}`}
-                    onOpen={() => openHouse(c)}
-                    onCall={(e) => callPhone(e, c.phone)}
-                    onNav={(e) => navigateMaps(e, c.address)}
-                  />
-                ))
-              )}
-            </ul>
-          )}
-        </section>
+      {/* ============================================================
+          MOBILE / TABLET — stacked column (<lg)
+          ============================================================ */}
+      <div className="lg:hidden">
+        <div className="space-y-5">
+          {moneyBar}
+          {hottestSection}
+          {pipelineSection}
+          {wonSection}
+        </div>
       </div>
 
       {selected && (
@@ -397,13 +458,11 @@ function DealRow({
   return (
     <li>
       <div className="flex items-stretch gap-2">
-        {/* Card body */}
         <button
           type="button"
           onClick={onOpen}
           className="press-brutal flex-1 text-left border-2 border-foreground bg-card flex min-h-[72px]"
         >
-          {/* Urgency stripe */}
           <span
             aria-hidden
             className={`w-1 shrink-0 border-r-2 border-foreground ${STRIPE_BG[card.stripe]}`}
@@ -445,7 +504,6 @@ function DealRow({
           </div>
         </button>
 
-        {/* Action buttons */}
         <div className="flex flex-col gap-2">
           <button
             type="button"
