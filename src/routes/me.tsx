@@ -151,7 +151,9 @@ function MePage() {
           MOBILE / TABLET — stacked layout (<lg)
           ============================================================ */}
       <div className="lg:hidden">
-        <section className="mb-6 flex flex-col items-center text-center">
+        {/* Profile identity block — hidden on mobile, visible on tablet (sm+) only.
+            Mobile drops it entirely so the page leads with the stats grid. */}
+        <section className="hidden sm:flex mb-6 flex-col items-center text-center">
           <div
             className="size-20 shrink-0 border-2 border-foreground bg-[var(--amber)] flex items-center justify-center font-mono font-bold text-3xl"
             aria-label="Avatar"
