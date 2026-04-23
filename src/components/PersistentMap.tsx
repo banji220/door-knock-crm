@@ -95,13 +95,13 @@ export function PersistentMap({
     };
   }, []);
 
-  /* Resize when inset changes (panel toggles) */
+  /* Resize when insets change (panel collapses, top bar mounts, etc.) */
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const t = setTimeout(() => map.resize(), 50);
+    const t = setTimeout(() => map.resize(), 220);
     return () => clearTimeout(t);
-  }, [leftInset]);
+  }, [leftInset, topInset, panelInset]);
 
   /* Render pins */
   useEffect(() => {
