@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, ElementType, CSSProperties } from "react";
 
 /* =========================================================================
    Responsive primitives — the ONLY way pages should branch on viewport.
@@ -38,11 +38,10 @@ export function Show({
 }: {
   on: Slot;
   children: ReactNode;
-  as?: keyof JSX.IntrinsicElements;
+  as?: ElementType;
   className?: string;
 }) {
-  const C = Tag as keyof JSX.IntrinsicElements;
-  // @ts-expect-error generic JSX intrinsic
+  const C = Tag;
   return <C className={`${SLOT_CLASS[on]} ${className}`.trim()}>{children}</C>;
 }
 
@@ -137,7 +136,7 @@ export function ResponsiveGrid({
       className={`grid ${m} ${t} ${dCls} ${gapClass} ${className}`.trim()}
       style={
         dStyle
-          ? ({ gridTemplateColumns: cols.desktop as string } as React.CSSProperties)
+          ? ({ gridTemplateColumns: cols.desktop as string } as CSSProperties)
           : undefined
       }
     >
