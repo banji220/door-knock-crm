@@ -3,6 +3,7 @@ import { Link, useLocation, useRouterState, useNavigate } from "@tanstack/react-
 import { ChevronLeft, ChevronRight, X, Search } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
+import { Logo } from "./Logo";
 import {
   PersistentMap,
   useSelectedPin,
@@ -332,13 +333,16 @@ function DesktopTopBar() {
       className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 bg-foreground text-background border-b-2 border-foreground"
       style={{ height: `${TOPBAR_H}px` }}
     >
-      {/* Left — wordmark */}
+      {/* Left — logo + wordmark */}
       <Link
         to="/"
-        className="font-mono font-bold uppercase tracking-widest text-base text-background"
+        className="flex items-center gap-2.5 text-background"
         aria-label="Giraffe — go to Today"
       >
-        GIRAFFE
+        <Logo tone="light" size={28} />
+        <span className="font-mono font-bold uppercase tracking-widest text-base">
+          GIRAFFE
+        </span>
       </Link>
 
       {/* Center — global search */}

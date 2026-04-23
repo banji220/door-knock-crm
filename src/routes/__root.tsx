@@ -1,11 +1,15 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+import { Logo } from "@/components/Logo";
 
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md w-full border-brutal-thick bg-card p-6 text-center">
+        <div className="flex justify-center mb-4">
+          <Logo tone="dark" size={64} />
+        </div>
         <div className="inline-block border-brutal-thick bg-ink text-cream px-3 py-1 text-xs font-mono uppercase tracking-wider mb-4">
           404
         </div>
@@ -43,6 +47,8 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
