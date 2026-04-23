@@ -83,7 +83,7 @@ export function PersistentMap({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
       center: STREET_CENTER,
-      zoom: 17,
+      zoom: 16.4,
       pitch: 0,
       attributionControl: false,
     });
@@ -92,10 +92,48 @@ export function PersistentMap({
       "bottom-right",
     );
     mapRef.current = map;
+
+    /* Frame the whole territory on first load — fit bounds around ALL
+       pins with padding for the left command panel + top bar so the
+       neighborhood is visible end-to-end. */
+    const initialFrame = () => {
+      if (pinsState.length === 0) return;
+      const lngs = pinsState.map((p) => p.lng);
+      const lats = pinsState.map((p) => p.lat);
+      const bounds: [[number, number], [number, number]] = [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ];
+      map.fitBounds(bounds, {
+        padding: {
+          top: topInset + 60,
+          bottom: 60,
+          left: panelInset + 60,
+          right: rightInset + 60,
+        },
+        duration: 0,
+        maxZoom: 17.2,
+      });
+    };
+    if (map.loaded()) initialFrame();
+    else map.once("load", initialFrame);
+
+    /* Demo seed: pre-select a hot pin so the desktop war-room view shows
+       the right detail drawer populated on first visit. Only seeds if
+       nothing is already selected (e.g. user navigated back). */
+    if (currentSelected === null) {
+      const seed =
+        pinsState.find((p) => p.outcome === "callback") ??
+        pinsState.find((p) => p.outcome === "quoted") ??
+        pinsState[0];
+      if (seed) setSelectedPin(seed);
+    }
+
     return () => {
       map.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* Resize when insets change (panel collapses, top bar mounts, etc.) */
