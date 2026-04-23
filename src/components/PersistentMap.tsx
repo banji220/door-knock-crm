@@ -104,7 +104,7 @@ export function PersistentMap({
     if (!map) return;
     const t = setTimeout(() => map.resize(), 220);
     return () => clearTimeout(t);
-  }, [leftInset, topInset, panelInset]);
+  }, [leftInset, topInset, panelInset, rightInset]);
 
   /* Render pins */
   useEffect(() => {
