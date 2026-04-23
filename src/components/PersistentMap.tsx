@@ -59,12 +59,15 @@ export function PersistentMap({
   leftInset = 0,
   /** Top inset (px) for top bar — map starts below this. */
   topInset = 0,
-  /** Width of the floating panel (px) — used to position map controls clear of it. */
+  /** Width of the left floating panel (px) — used to position map controls clear of it. */
   panelInset = 0,
+  /** Width of the right detail drawer (px) — pushes map controls inward. */
+  rightInset = 0,
 }: {
   leftInset?: number;
   topInset?: number;
   panelInset?: number;
+  rightInset?: number;
 }) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
