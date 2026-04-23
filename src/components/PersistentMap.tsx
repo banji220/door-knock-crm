@@ -59,12 +59,15 @@ export function PersistentMap({
   leftInset = 0,
   /** Top inset (px) for top bar — map starts below this. */
   topInset = 0,
-  /** Width of the floating panel (px) — used to position map controls clear of it. */
+  /** Width of the left floating panel (px) — used to position map controls clear of it. */
   panelInset = 0,
+  /** Width of the right detail drawer (px) — pushes map controls inward. */
+  rightInset = 0,
 }: {
   leftInset?: number;
   topInset?: number;
   panelInset?: number;
+  rightInset?: number;
 }) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -101,7 +104,7 @@ export function PersistentMap({
     if (!map) return;
     const t = setTimeout(() => map.resize(), 220);
     return () => clearTimeout(t);
-  }, [leftInset, topInset, panelInset]);
+  }, [leftInset, topInset, panelInset, rightInset]);
 
   /* Render pins */
   useEffect(() => {
@@ -177,10 +180,11 @@ export function PersistentMap({
         aria-label="Territory map"
       />
 
-      {/* Map controls — top-right of the map area, just below the top bar. */}
+      {/* Map controls — top-right of the map area, just below the top bar.
+          Slide inward when the right detail drawer is open. */}
       <div
-        className="fixed z-20 flex flex-col gap-2"
-        style={{ top: `${topInset + 16}px`, right: "1rem" }}
+        className="fixed z-20 flex flex-col gap-2 transition-[right] duration-200 ease-out"
+        style={{ top: `${topInset + 16}px`, right: `${rightInset + 16}px` }}
       >
         <button
           type="button"

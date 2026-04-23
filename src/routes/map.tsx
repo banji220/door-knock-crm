@@ -212,20 +212,9 @@ function DesktopMapPanel() {
         )}
       </ul>
 
-      {/* Selected house sheet (overlays both panel and map) */}
-      {selected && (
-        <HouseCard
-          pin={selected}
-          onClose={() => setSelectedPin(null)}
-          onLogOutcome={handleLogOutcome}
-          onQuote={() =>
-            navigate({
-              to: "/quote",
-              search: { address: selected.address, mode: "quote" },
-            })
-          }
-        />
-      )}
+      {/* Note: the selected-pin detail is rendered by the desktop right
+          drawer in AppShell. We deliberately do NOT mount HouseCard here
+          on desktop — it would duplicate the detail and overlay the map. */}
     </AppShell>
   );
 }
