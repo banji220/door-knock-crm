@@ -161,10 +161,22 @@ function DesktopFieldLayout({
   const collapsed = isMapRoute || userCollapsed;
   const panelW = collapsed ? PANEL_W_COLLAPSED : PANEL_W;
 
+  /* Layer 3 — right detail drawer. Driven by the global selected-pin
+     store, so clicks on map pins OR list items in the left panel both
+     open it. */
+  const selected = useSelectedPin();
+  const rightOpen = selected !== null;
+  const rightInset = rightOpen ? RIGHT_PANEL_W : 0;
+
   return (
     <div className="hidden lg:block">
       {/* Layer 1 — full-bleed map */}
-      <PersistentMap leftInset={0} topInset={TOPBAR_H} panelInset={panelW} />
+      <PersistentMap
+        leftInset={0}
+        topInset={TOPBAR_H}
+        panelInset={panelW}
+        rightInset={rightInset}
+      />
 
       {/* Top bar (56px) — sits above both panel and map */}
       <DesktopTopBar />
@@ -216,7 +228,94 @@ function DesktopFieldLayout({
           </button>
         )}
       </aside>
+
+      {/* Layer 3 — right detail drawer (slides in on pin / card click) */}
+      <DesktopRightPanel open={rightOpen} />
     </div>
+  );
+}
+
+/* ---------------- DesktopRightPanel ----------------
+   420px slide-in drawer pinned to the right edge. Subscribes to the
+   global selected-pin store so any pin click (map or left panel list)
+   opens it. Slides with a 200ms transform from translateX(100%) → 0.
+   ----------------------------------------------------------------- */
+function DesktopRightPanel({ open }: { open: boolean }) {
+  const selected = useSelectedPin();
+  const navigate = useNavigate();
+
+  /* When 'open' flips false we still need to render `selected` for the
+     duration of the slide-out animation. We rely on the global store
+     resetting after onClose, and the animation runs purely on the
+     transform regardless. */
+
+  const handleClose = () => setSelectedPin(null);
+
+  const handleLogOutcome = (outcome: KnockOutcome) => {
+    if (!selected) return;
+    updatePins((prev) =>
+      prev.map((x) => (x.id === selected.id ? { ...x, outcome } : x)),
+    );
+    setSelectedPin({ ...selected, outcome });
+  };
+
+  const handleQuote = () => {
+    if (!selected) return;
+    navigate({
+      to: "/quote",
+      search: { address: selected.address, mode: "quote" },
+    });
+  };
+
+  return (
+    <aside
+      className="fixed right-0 z-30 flex flex-col bg-card border-l-2 border-foreground shadow-[-6px_0_0_0_color-mix(in_oklab,var(--foreground)_15%,transparent)] transition-transform duration-200 ease-out"
+      style={{
+        top: `${TOPBAR_H}px`,
+        bottom: 0,
+        width: `${RIGHT_PANEL_W}px`,
+        transform: open ? "translateX(0)" : "translateX(100%)",
+      }}
+      aria-label="Detail panel"
+      aria-hidden={!open}
+    >
+      {selected && (
+        <>
+          {/* Sticky header with address + close button */}
+          <div className="bg-background border-b-2 border-foreground px-4 py-3 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                📍 Address
+              </div>
+              <h2 className="text-xl font-display font-bold uppercase truncate">
+                {selected.address}
+              </h2>
+              <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mt-0.5">
+                {OUTCOME_META[selected.outcome].full}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="press-brutal size-9 border-2 border-foreground bg-card flex items-center justify-center shrink-0"
+              aria-label="Close detail panel"
+            >
+              <X className="size-4" strokeWidth={3} />
+            </button>
+          </div>
+
+          {/* Scrollable content — reuses HouseCardBody so mobile + desktop
+              detail flows stay perfectly in sync. */}
+          <div className="flex-1 overflow-y-auto bg-background">
+            <HouseCardBody
+              pin={selected}
+              onLogOutcome={handleLogOutcome}
+              onQuote={handleQuote}
+            />
+          </div>
+        </>
+      )}
+    </aside>
   );
 }
 
