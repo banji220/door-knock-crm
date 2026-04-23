@@ -275,6 +275,23 @@
   .border-brutal-thick {
     border: 3px solid var(--ink);
   }
+  /* Hairline border — for secondary surfaces in the new hierarchy system.
+     Use this on lists / row groups that should NOT compete with hero cards. */
+  .border-hairline {
+    border: 1px solid var(--hairline);
+  }
+
+  /* Surface tiers */
+  .surface-hero    { background-color: var(--surface-hero); }
+  .surface-raised  { background-color: var(--surface-raised); }
+  .surface-sunken  { background-color: var(--surface-sunken); }
+
+  /* Accent stripe — for urgent/follow-up rows. 4px solid left edge,
+     no full-row background tint. Hierarchy via signal, not heaviness. */
+  .stripe-destructive { box-shadow: inset 4px 0 0 0 var(--destructive); }
+  .stripe-warning     { box-shadow: inset 4px 0 0 0 var(--warning); }
+  .stripe-primary     { box-shadow: inset 4px 0 0 0 var(--primary); }
+  .stripe-success     { box-shadow: inset 4px 0 0 0 var(--success); }
 
   /* No-op shadow utilities (back-compat) — explicitly empty */
   .shadow-brutal,
