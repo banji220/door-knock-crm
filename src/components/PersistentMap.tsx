@@ -168,20 +168,19 @@ export function PersistentMap({
 
   return (
     <>
-      {/* Map fills the area to the right of the panel.
-          Sits below the panel (z-0). Uses fixed positioning so it stays
-          stable across route changes. */}
+      {/* Map fills the viewport (offset only by the top bar). Sits behind
+          the floating panel (z-0). Stays stable across route changes. */}
       <div
         ref={mapContainer}
-        className="fixed top-0 right-0 bottom-0 z-0"
-        style={{ left: `${leftInset}px` }}
+        className="fixed right-0 bottom-0 z-0"
+        style={{ left: `${leftInset}px`, top: `${topInset}px` }}
         aria-label="Territory map"
       />
 
-      {/* Map controls — top-right of the map area */}
+      {/* Map controls — top-right of the map area, just below the top bar. */}
       <div
-        className="fixed top-4 z-20 flex flex-col gap-2"
-        style={{ right: "1rem" }}
+        className="fixed z-20 flex flex-col gap-2"
+        style={{ top: `${topInset + 16}px`, right: "1rem" }}
       >
         <button
           type="button"
