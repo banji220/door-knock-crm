@@ -1,9 +1,17 @@
 import { ReactNode, useState } from "react";
-import { Link, useLocation, useRouterState } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Link, useLocation, useRouterState, useNavigate } from "@tanstack/react-router";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
-import { PersistentMap } from "./PersistentMap";
+import {
+  PersistentMap,
+  useSelectedPin,
+  setSelectedPin,
+  updatePins,
+} from "./PersistentMap";
+import { HouseCardBody } from "./HouseCard";
+import { OUTCOME_META } from "@/lib/map-data";
+import type { KnockOutcome } from "@/lib/mock-data";
 
 type AppShellProps = {
   title?: string;
