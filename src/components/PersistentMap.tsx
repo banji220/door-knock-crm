@@ -55,10 +55,16 @@ export function usePins(): HousePin[] {
 }
 
 export function PersistentMap({
-  /** Left inset (px) so the map's interactive center sits to the right of the panel */
+  /** Left inset (px) — historically reserved a column for the panel; now usually 0 (full-bleed). */
   leftInset = 0,
+  /** Top inset (px) for top bar — map starts below this. */
+  topInset = 0,
+  /** Width of the floating panel (px) — used to position map controls clear of it. */
+  panelInset = 0,
 }: {
   leftInset?: number;
+  topInset?: number;
+  panelInset?: number;
 }) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -89,13 +95,13 @@ export function PersistentMap({
     };
   }, []);
 
-  /* Resize when inset changes (panel toggles) */
+  /* Resize when insets change (panel collapses, top bar mounts, etc.) */
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const t = setTimeout(() => map.resize(), 50);
+    const t = setTimeout(() => map.resize(), 220);
     return () => clearTimeout(t);
-  }, [leftInset]);
+  }, [leftInset, topInset, panelInset]);
 
   /* Render pins */
   useEffect(() => {
@@ -162,20 +168,19 @@ export function PersistentMap({
 
   return (
     <>
-      {/* Map fills the area to the right of the panel.
-          Sits below the panel (z-0). Uses fixed positioning so it stays
-          stable across route changes. */}
+      {/* Map fills the viewport (offset only by the top bar). Sits behind
+          the floating panel (z-0). Stays stable across route changes. */}
       <div
         ref={mapContainer}
-        className="fixed top-0 right-0 bottom-0 z-0"
-        style={{ left: `${leftInset}px` }}
+        className="fixed right-0 bottom-0 z-0"
+        style={{ left: `${leftInset}px`, top: `${topInset}px` }}
         aria-label="Territory map"
       />
 
-      {/* Map controls — top-right of the map area */}
+      {/* Map controls — top-right of the map area, just below the top bar. */}
       <div
-        className="fixed top-4 z-20 flex flex-col gap-2"
-        style={{ right: "1rem" }}
+        className="fixed z-20 flex flex-col gap-2"
+        style={{ top: `${topInset + 16}px`, right: "1rem" }}
       >
         <button
           type="button"
