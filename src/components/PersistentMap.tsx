@@ -106,7 +106,15 @@ export function PersistentMap({
     return () => clearTimeout(t);
   }, [leftInset, topInset, panelInset, rightInset]);
 
-  /* Render pins */
+  /* Track currently selected pin id, so we can re-render markers with a
+     ring highlight when selection changes. Subscribed via the same store
+     used by the right detail drawer, so map pin clicks AND list-item
+     clicks (deals, clients, map list) all stay in sync. */
+  const selected = useSelectedPin();
+  const selectedId = selected?.id ?? null;
+
+  /* Render pins. Re-runs whenever the pin set OR the selected id changes
+     so the highlight ring follows the selection from any source. */
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -115,6 +123,7 @@ export function PersistentMap({
       markersRef.current = [];
       pins.forEach((p) => {
         const meta = OUTCOME_META[p.outcome];
+        const isSelected = p.id === selectedId;
         const el = document.createElement("button");
         el.className =
           "press-brutal cursor-pointer border-2 border-foreground font-mono font-bold flex items-center justify-center";
@@ -128,10 +137,22 @@ export function PersistentMap({
           : "var(--foreground)";
         el.textContent = meta.label;
         el.setAttribute("aria-label", `${p.address} — ${meta.full}`);
+        el.setAttribute("aria-pressed", isSelected ? "true" : "false");
+        if (isSelected) {
+          /* Brutalist "ring-2 ring-primary" — solid primary outline +
+             subtle elevation so the selected pin reads as on top. */
+          el.style.outline = "3px solid var(--primary)";
+          el.style.outlineOffset = "2px";
+          el.style.zIndex = "10";
+          el.style.transform = "scale(1.08)";
+        } else {
+          el.style.zIndex = "1";
+        }
         el.addEventListener("click", (e) => {
           e.stopPropagation();
+          /* Just set the selection — the pan/zoom effect below handles
+             the smooth fly-to with proper padding for both panels. */
           setSelectedPin(p);
-          map.flyTo({ center: [p.lng, p.lat], zoom: 18, duration: 600 });
         });
         const marker = new mapboxgl.Marker({ element: el, anchor: "center" })
           .setLngLat([p.lng, p.lat])
@@ -141,7 +162,36 @@ export function PersistentMap({
     };
     if (map.loaded()) draw();
     else map.once("load", draw);
-  }, [pins]);
+  }, [pins, selectedId]);
+
+  /* When selection changes, smoothly center the pin in the visible map
+     area between the two panels. Padding accounts for the left command
+     panel and (when open) the right detail drawer plus the top bar. */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !selected) return;
+    const fly = () => {
+      map.flyTo({
+        center: [selected.lng, selected.lat],
+        zoom: Math.max(map.getZoom(), 17.5),
+        duration: 600,
+        essential: true,
+        padding: {
+          top: topInset + 40,
+          bottom: 40,
+          left: panelInset + 40,
+          right: rightInset + 40,
+        },
+      });
+    };
+    if (map.loaded()) fly();
+    else map.once("load", fly);
+    /* We deliberately do NOT depend on inset values — those changes are
+       handled by the map.resize() effect. Only re-fly when the chosen
+       pin actually changes. */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id]);
+
 
   const recenterGPS = useCallback(() => {
     if (!navigator.geolocation || !mapRef.current) return;
