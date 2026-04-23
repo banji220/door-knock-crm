@@ -1,17 +1,29 @@
 import { useEffect, useState } from "react";
 
-const MOBILE_MAX = 639; // < 640 = mobile
-const TABLET_MAX = 1023; // 640..1023 = tablet, >=1024 = desktop
+/* =========================================================================
+   Responsive breakpoint system — single source of truth.
+   Mirrors the --breakpoint-* CSS tokens in styles.css.
+
+   Mobile  :  0    – 640px
+   Tablet  :  641  – 1024px
+   Desktop :  1025px and up
+   ========================================================================= */
+
+export const BP = {
+  MOBILE_MAX: 640,
+  TABLET_MAX: 1024,
+} as const;
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
 
 function getBreakpoint(width: number): Breakpoint {
-  if (width <= MOBILE_MAX) return "mobile";
-  if (width <= TABLET_MAX) return "tablet";
+  if (width <= BP.MOBILE_MAX) return "mobile";
+  if (width <= BP.TABLET_MAX) return "tablet";
   return "desktop";
 }
 
-/** SSR-safe responsive breakpoint hook. Returns "desktop" until mounted. */
+/** SSR-safe responsive breakpoint hook. Returns "desktop" until mounted to
+ *  match the desktop-first server render and avoid hydration mismatches. */
 export function useBreakpoint(): Breakpoint {
   const [bp, setBp] = useState<Breakpoint>("desktop");
 
@@ -23,4 +35,15 @@ export function useBreakpoint(): Breakpoint {
   }, []);
 
   return bp;
+}
+
+/** Convenience flags. */
+export function useIsDesktop() {
+  return useBreakpoint() === "desktop";
+}
+export function useIsTablet() {
+  return useBreakpoint() === "tablet";
+}
+export function useIsMobile() {
+  return useBreakpoint() === "mobile";
 }
