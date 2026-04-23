@@ -1,14 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation, useRouterState } from "@tanstack/react-router";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Zap,
-  Target,
-  Map as MapIcon,
-  Users,
-  User,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { BottomNav } from "./BottomNav";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { PersistentMap } from "./PersistentMap";
@@ -31,7 +23,7 @@ const PANEL_W_COLLAPSED = 48;
 
 /* Field routes get the persistent map + floating panel treatment on desktop.
    Me page is its own wide dashboard (no map behind it). */
-const FIELD_ROUTES = new Set(["/", "/deals", "/map", "/clients"]);
+const FIELD_ROUTES = new Set(["/", "/deals", "/map", "/clients", "/me"]);
 
 /* =========================================================================
    AppShell
@@ -151,7 +143,13 @@ function DesktopFieldLayout({
   renderHeader: (forPanel?: boolean) => ReactNode;
   children: ReactNode;
 }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isMapRoute = pathname === "/map";
+
+  /* User-controlled collapse. When the Map tab is active, we always show
+     the panel as the tab strip only (the map gets the full stage). */
+  const [userCollapsed, setUserCollapsed] = useState(false);
+  const collapsed = isMapRoute || userCollapsed;
   const panelW = collapsed ? PANEL_W_COLLAPSED : PANEL_W;
 
   return (
@@ -162,9 +160,9 @@ function DesktopFieldLayout({
       {/* Top bar (56px) — sits above both panel and map */}
       <DesktopTopBar />
 
-      {/* Layer 2 — left command panel, collapsible */}
+      {/* Layer 2 — left command panel */}
       <aside
-        className="fixed left-0 z-30 flex bg-card border-r-2 border-foreground shadow-[6px_0_0_0_color-mix(in_oklab,var(--foreground)_15%,transparent)] transition-[width] duration-200 ease-out"
+        className="fixed left-0 z-30 flex flex-col bg-card border-r-2 border-foreground shadow-[6px_0_0_0_color-mix(in_oklab,var(--foreground)_15%,transparent)] transition-[width] duration-200 ease-out"
         style={{
           top: `${TOPBAR_H}px`,
           bottom: 0,
@@ -172,12 +170,18 @@ function DesktopFieldLayout({
         }}
         aria-label="Command panel"
       >
-        {/* Icon rail — always visible, gives context when collapsed */}
-        <PanelNavRail collapsed={collapsed} />
+        {/* Tab bar — horizontal text tabs across the top of the panel.
+            When collapsed, render a vertical icon-only fallback so users
+            can still switch routes from a 48px rail. */}
+        {collapsed ? (
+          <CollapsedNav />
+        ) : (
+          <PanelTabs />
+        )}
 
-        {/* Expanded content */}
+        {/* Panel content — only shown when expanded */}
         {!collapsed && (
-          <div className="flex flex-1 flex-col min-w-0 border-l-2 border-foreground bg-background">
+          <div className="flex flex-1 flex-col min-w-0 bg-background border-t-2 border-foreground">
             {renderHeader(true)}
             <main className="flex-1 overflow-y-auto px-5 py-5">
               {children}
@@ -185,20 +189,23 @@ function DesktopFieldLayout({
           </div>
         )}
 
-        {/* Collapse / expand toggle — top-right edge of the panel */}
-        <button
-          type="button"
-          onClick={() => setCollapsed((c) => !c)}
-          className="press-brutal absolute top-3 -right-4 z-10 size-8 border-2 border-foreground bg-card flex items-center justify-center shadow-[2px_2px_0_0_var(--foreground)]"
-          aria-label={collapsed ? "Expand panel" : "Collapse panel"}
-          aria-expanded={!collapsed}
-        >
-          {collapsed ? (
-            <ChevronRight className="size-4" strokeWidth={3} />
-          ) : (
-            <ChevronLeft className="size-4" strokeWidth={3} />
-          )}
-        </button>
+        {/* Collapse / expand toggle — top-right edge of the panel.
+            Hidden on /map since the panel is forcibly collapsed there. */}
+        {!isMapRoute && (
+          <button
+            type="button"
+            onClick={() => setUserCollapsed((c) => !c)}
+            className="press-brutal absolute top-3 -right-4 z-10 size-8 border-2 border-foreground bg-card flex items-center justify-center shadow-[2px_2px_0_0_var(--foreground)]"
+            aria-label={collapsed ? "Expand panel" : "Collapse panel"}
+            aria-expanded={!collapsed}
+          >
+            {collapsed ? (
+              <ChevronRight className="size-4" strokeWidth={3} />
+            ) : (
+              <ChevronLeft className="size-4" strokeWidth={3} />
+            )}
+          </button>
+        )}
       </aside>
     </div>
   );
@@ -233,18 +240,51 @@ function DesktopTopBar() {
   );
 }
 
-/* ---------------- PanelNavRail ----------------
-   48px icon strip on the left edge of the panel. Always visible (even when
-   panel is expanded) so primary nav is one click away. */
-const RAIL_ITEMS = [
-  { to: "/", label: "Today", icon: Zap, badge: 3 },
-  { to: "/deals", label: "Deals", icon: Target, badge: 5 },
-  { to: "/map", label: "Map", icon: MapIcon, badge: 0 },
-  { to: "/clients", label: "Clients", icon: Users, badge: 0 },
-  { to: "/me", label: "Me", icon: User, badge: 0 },
+/* ---------------- Panel navigation ----------------
+   Horizontal text tabs across the top of the expanded panel.
+   Active tab = border-b-2 border-primary text-primary.
+   Inactive   = text-muted-foreground hover:text-foreground.
+   ------------------------------------------------------- */
+const TAB_ITEMS = [
+  { to: "/", label: "Today" },
+  { to: "/deals", label: "Deals" },
+  { to: "/map", label: "Map" },
+  { to: "/clients", label: "Clients" },
+  { to: "/me", label: "Me" },
 ] as const;
 
-function PanelNavRail({ collapsed }: { collapsed: boolean }) {
+function PanelTabs() {
+  const { pathname } = useLocation();
+  return (
+    <nav
+      className="flex bg-card border-b-2 border-foreground"
+      aria-label="Primary"
+    >
+      {TAB_ITEMS.map(({ to, label }) => {
+        const active = pathname === to;
+        return (
+          <Link
+            key={to}
+            to={to}
+            className={`flex-1 text-center px-1 py-3 text-xs font-mono font-bold uppercase tracking-wider border-b-2 transition-colors ${
+              active
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+            aria-current={active ? "page" : undefined}
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+/* Collapsed (icon-only) fallback. Used when the panel is collapsed by the
+   user OR forced collapsed on the /map route. Renders the same 5 tabs as
+   stacked icon buttons for one-click navigation. */
+function CollapsedNav() {
   const { pathname } = useLocation();
   return (
     <nav
@@ -252,32 +292,22 @@ function PanelNavRail({ collapsed }: { collapsed: boolean }) {
       style={{ width: `${PANEL_W_COLLAPSED}px` }}
       aria-label="Primary"
     >
-      {RAIL_ITEMS.map(({ to, label, icon: Icon, badge }) => {
+      {TAB_ITEMS.map(({ to, label }) => {
         const active = pathname === to;
         return (
           <Link
             key={to}
             to={to}
-            className={`press-brutal relative size-10 flex items-center justify-center border-2 ${
+            className={`size-9 flex items-center justify-center font-mono font-bold text-[10px] uppercase tracking-wider border-2 ${
               active
                 ? "border-foreground bg-foreground text-background"
-                : "border-transparent hover:border-foreground hover:bg-muted text-foreground"
+                : "border-transparent text-muted-foreground hover:border-foreground hover:text-foreground"
             }`}
             aria-label={label}
-            title={collapsed ? label : undefined}
+            title={label}
+            aria-current={active ? "page" : undefined}
           >
-            <Icon
-              className="size-5"
-              strokeWidth={active ? 2.75 : 2.25}
-            />
-            {badge > 0 && (
-              <span
-                className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 border-2 border-foreground bg-destructive text-destructive-foreground font-mono font-bold text-[9px] flex items-center justify-center leading-none tabular-nums"
-                aria-hidden
-              >
-                {badge}
-              </span>
-            )}
+            {label.slice(0, 2)}
           </Link>
         );
       })}
