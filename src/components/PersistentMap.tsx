@@ -260,3 +260,10 @@ export function PersistentMap({
 export function getMap(): mapboxgl.Map | null {
   return null; // reserved for future cross-route flyTo coordination
 }
+
+/** Look up a pin by exact address match — used by Deals/Clients rows so
+ *  clicking a card highlights the matching pin and opens the right panel. */
+export function findPinByAddress(address: string): HousePin | undefined {
+  return pinsState.find((p) => p.address === address);
+}
+
