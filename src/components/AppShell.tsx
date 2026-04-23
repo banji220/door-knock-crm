@@ -23,7 +23,7 @@ const PANEL_W_COLLAPSED = 48;
 
 /* Field routes get the persistent map + floating panel treatment on desktop.
    Me page is its own wide dashboard (no map behind it). */
-const FIELD_ROUTES = new Set(["/", "/deals", "/map", "/clients"]);
+const FIELD_ROUTES = new Set(["/", "/deals", "/map", "/clients", "/me"]);
 
 /* =========================================================================
    AppShell
