@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useBreakpoint } from "@/hooks/use-breakpoint";
 import { formatNumber } from "@/lib/format";
 import {
@@ -14,12 +13,17 @@ import {
 } from "@/lib/activity-data";
 
 /* =========================================================================
-   ContributionHeatmap
-   - Mobile  (<640):    90 days,  14×14 cells, gap 3
-   - Tablet  (640-1023): 180 days, ~16×16 cells, gap 3 — wide intermediate
-   - Desktop (>=1024):  1y default, 18×18 cells, gap 4 (toggleable)
-   - 3+ day streak cells get a 2px ink ring
-   - Hover tooltip on desktop, tap-to-expand detail on touch sizes
+   ContributionHeatmap — fluid responsive grid, single source of truth.
+
+   Per-tier defaults (user can override via the range button):
+     mobile  → 90 days
+     tablet  → 180 days
+     desktop → 365 days
+
+   Cells are 100%-fluid (1fr columns) so the grid ALWAYS fills the card.
+   No fixed pixel widths, no horizontal scroll, no centered empty space.
+   Tabs never wrap — they scroll horizontally on mobile if pressed.
+   Tooltip uses a stacked grid layout on touch tiers; multi-column on desktop.
    ========================================================================= */
 
 type Range = "90d" | "180d" | "1y";
@@ -45,12 +49,11 @@ const DOW_FULL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 type Cell = DayRecord & { streakLen: number };
 
-/* Slice the year to the requested range and snap to weeks (Sun-Sat) */
+/* Slice the year to the requested range, snapped to weeks (Sun-Sat). */
 function buildGrid(allDays: DayRecord[], range: Range) {
   const days = RANGES.find((r) => r.key === range)!.days;
   const sliced = allDays.slice(-days);
 
-  /* Pad the front to land on a Sunday */
   const firstDow = sliced[0].date.getDay();
   const padFront: DayRecord[] = [];
   for (let i = firstDow; i > 0; i--) {
@@ -61,7 +64,6 @@ function buildGrid(allDays: DayRecord[], range: Range) {
       inFuture: true,
     });
   }
-  /* Pad the back to land on Saturday */
   const last = sliced[sliced.length - 1];
   const padBack: DayRecord[] = [];
   for (let i = 1; i <= 6 - last.date.getDay(); i++) {
@@ -78,7 +80,6 @@ function buildGrid(allDays: DayRecord[], range: Range) {
     streakLen: 0,
   }));
 
-  /* Streak length (only for non-future days) */
   let runStart = 0;
   for (let i = 0; i <= flat.length; i++) {
     const broke = i === flat.length || flat[i].inFuture || flat[i].doors <= 0;
@@ -105,35 +106,35 @@ function formatDate(d: Date) {
 }
 
 export function ContributionHeatmap() {
-  /* Defer all date/viewport-derived rendering until after mount to avoid
-     SSR↔client hydration mismatches. */
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const isMobile = useIsMobile();
   const breakpoint = useBreakpoint();
+  const isMobile = breakpoint === "mobile";
   const isTablet = breakpoint === "tablet";
+  const isDesktop = breakpoint === "desktop";
+
   const [metric, setMetric] = useState<Metric>("doors");
-  const [range, setRange] = useState<Range>("90d");
+  const [range, setRange] = useState<Range>("1y"); // desktop default for SSR
   const [hoverCell, setHoverCell] = useState<Cell | null>(null);
   const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
   const rangeMenuRef = useRef<HTMLDivElement>(null);
 
-  /* Default range by breakpoint — mobile:90d, tablet:180d, desktop:1y. */
+  /* Auto-select range by tier on first mount + on tier change, until user
+     manually picks a range (then their choice sticks). */
   const [rangeUserSet, setRangeUserSet] = useState(false);
   useEffect(() => {
     if (!mounted || rangeUserSet) return;
-    setRange(breakpoint === "mobile" ? "90d" : breakpoint === "tablet" ? "180d" : "1y");
-  }, [mounted, breakpoint, rangeUserSet]);
+    setRange(isMobile ? "90d" : isTablet ? "180d" : "1y");
+  }, [mounted, isMobile, isTablet, rangeUserSet]);
   const setRangeManual = (r: Range) => {
     setRangeUserSet(true);
     setRange(r);
     setRangeMenuOpen(false);
   };
 
-  /* Close range popover on outside click */
   useEffect(() => {
     if (!rangeMenuOpen) return;
     const onDown = (e: MouseEvent) => {
@@ -171,9 +172,11 @@ export function ContributionHeatmap() {
     return { grid, cols, total, monthLabels: labels };
   }, [allDays, range, metric]);
 
-  const GAP = isMobile ? 3 : isTablet ? 3 : 4;
-  const dayColWidth = isMobile ? 24 : isTablet ? 26 : 28;
-  const LEGEND_CELL = isMobile ? 14 : isTablet ? 16 : 18;
+  /* Spacing per tier — gap and day-label width. Cell SIZE itself is fluid
+     (1fr) so the grid always fills 100% of available width. */
+  const GAP = isMobile ? 2 : isTablet ? 3 : 3;
+  const DAY_LABEL_W = isMobile ? 18 : isTablet ? 22 : 26;
+  const LEGEND_CELL = isMobile ? 12 : isTablet ? 14 : 16;
 
   const totalLabel = `${metric} ${metric === "wins" ? "won" : "logged"} · last ${
     range === "90d" ? "90 days" : range === "180d" ? "180 days" : "year"
@@ -183,24 +186,24 @@ export function ContributionHeatmap() {
     ? grid.flat().find((c) => c.date.toISOString() === selectedDate) ?? null
     : null;
 
-  /* SSR-safe placeholder — same shell, no date-derived content */
+  /* SSR-safe placeholder */
   if (!mounted) {
     return (
-      <section className="border-2 border-foreground bg-card px-4 py-4 mb-6 relative">
-        <div className="h-[420px]" aria-hidden />
+      <section className="border-2 border-foreground bg-card px-4 py-4 lg:px-5 lg:py-5 relative">
+        <div className="h-[280px] sm:h-[340px] lg:h-[420px]" aria-hidden />
       </section>
     );
   }
 
   return (
-    <section className="border-2 border-foreground bg-card px-4 py-4 mb-6 relative">
+    <section className="border-2 border-foreground bg-card px-4 py-4 sm:px-5 sm:py-5 relative">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
-          <div className="text-3xl font-bold font-mono tabular-nums leading-none">
+          <div className="text-2xl sm:text-3xl font-bold font-mono tabular-nums leading-none">
             {formatNumber(total)}
           </div>
-          <div className="mt-1.5 text-xs font-mono text-muted-foreground uppercase tracking-wider">
+          <div className="mt-1.5 text-[10px] sm:text-xs font-mono text-muted-foreground uppercase tracking-wider">
             {totalLabel}
           </div>
         </div>
@@ -217,12 +220,10 @@ export function ContributionHeatmap() {
         </div>
       </div>
 
-      {/* Controls — tabs row + single timeframe button (popover on click) */}
+      {/* Controls — tabs + single timeframe button */}
       <div className="flex items-stretch gap-2 mb-3">
-        {/* Metric tabs: scroll horizontally on mobile, flex evenly otherwise.
-            Tabs never wrap; min-w-0 + whitespace-nowrap prevents collisions. */}
         <div
-          className="flex-1 min-w-0 flex border-2 border-foreground overflow-x-auto sm:overflow-visible scrollbar-none"
+          className="flex-1 min-w-0 flex border-2 border-foreground overflow-x-auto scrollbar-none"
           role="tablist"
           aria-label="Metric"
         >
@@ -234,9 +235,11 @@ export function ContributionHeatmap() {
                 type="button"
                 role="tab"
                 onClick={() => setMetric(m.key)}
-                className={`press-brutal flex-1 sm:flex-1 px-3 sm:px-2 lg:px-4 py-2 text-xs font-mono font-bold uppercase tracking-wider whitespace-nowrap active:translate-y-[2px] ${
-                  i > 0 ? "border-l-2 border-foreground" : ""
-                } ${active ? "bg-foreground text-background" : "bg-muted text-muted-foreground"}`}
+                className={[
+                  "press-brutal flex-1 px-2 sm:px-3 lg:px-4 py-2 text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider whitespace-nowrap active:translate-y-[2px]",
+                  i > 0 ? "border-l-2 border-foreground" : "",
+                  active ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
+                ].join(" ")}
                 aria-pressed={active}
               >
                 {m.label}
@@ -245,14 +248,13 @@ export function ContributionHeatmap() {
           })}
         </div>
 
-        {/* Timeframe — single button shows current range; click opens popover */}
         <div className="relative shrink-0" ref={rangeMenuRef}>
           <button
             type="button"
             onClick={() => setRangeMenuOpen((o) => !o)}
             aria-haspopup="listbox"
             aria-expanded={rangeMenuOpen}
-            className="press-brutal h-full flex items-center gap-1.5 px-3 py-2 border-2 border-foreground bg-card text-xs font-mono font-bold uppercase tracking-wider active:translate-y-[2px]"
+            className="press-brutal h-full flex items-center gap-1.5 px-3 py-2 border-2 border-foreground bg-card text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider active:translate-y-[2px]"
           >
             <span className="tabular-nums">
               {RANGES.find((r) => r.key === range)?.label.toUpperCase()}
@@ -291,10 +293,10 @@ export function ContributionHeatmap() {
         </div>
       </div>
 
-      {/* Grid (full-width, responsive cells) */}
+      {/* Fluid grid — fills 100% width at every tier */}
       <div className="w-full">
         {/* Month labels */}
-        <div className="flex mb-1" style={{ paddingLeft: `${dayColWidth}px` }}>
+        <div className="flex mb-1" style={{ paddingLeft: `${DAY_LABEL_W}px` }}>
           <div
             className="grid flex-1 min-w-0"
             style={{
@@ -307,7 +309,7 @@ export function ContributionHeatmap() {
               return (
                 <div
                   key={col}
-                  className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground h-3 leading-none"
+                  className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-muted-foreground h-3 leading-none"
                 >
                   {label ?? ""}
                 </div>
@@ -321,7 +323,7 @@ export function ContributionHeatmap() {
           <div
             className="grid mr-1.5 shrink-0"
             style={{
-              width: `${dayColWidth - 6}px`,
+              width: `${DAY_LABEL_W - 6}px`,
               gridTemplateRows: `repeat(7, minmax(0, 1fr))`,
               rowGap: `${GAP}px`,
             }}
@@ -329,7 +331,7 @@ export function ContributionHeatmap() {
             {["", "Mon", "", "Wed", "", "Fri", ""].map((label, r) => (
               <div
                 key={r}
-                className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground leading-none flex items-center"
+                className="text-[9px] sm:text-[10px] font-mono uppercase tracking-wider text-muted-foreground leading-none flex items-center"
               >
                 {label}
               </div>
@@ -360,7 +362,7 @@ export function ContributionHeatmap() {
                     type="button"
                     disabled={cell.inFuture}
                     onMouseEnter={(e) => {
-                      if (cell.inFuture) return;
+                      if (cell.inFuture || !isDesktop) return;
                       setHoverCell(cell);
                       const rect = (
                         e.currentTarget.closest("section") as HTMLElement
@@ -372,6 +374,7 @@ export function ContributionHeatmap() {
                       });
                     }}
                     onMouseLeave={() => {
+                      if (!isDesktop) return;
                       setHoverCell(null);
                       setHoverPos(null);
                     }}
@@ -414,8 +417,8 @@ export function ContributionHeatmap() {
         </div>
 
         {/* Legend */}
-        <div className="flex items-center justify-end gap-1.5 mt-3">
-          <span className="text-[11px] font-mono text-muted-foreground mr-1">
+        <div className="flex items-center justify-end gap-1 sm:gap-1.5 mt-3">
+          <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground mr-1">
             Less
           </span>
           {[0, 1, 2, 3, 4, 5].map((n) => (
@@ -426,14 +429,14 @@ export function ContributionHeatmap() {
               aria-hidden
             />
           ))}
-          <span className="text-[11px] font-mono text-muted-foreground ml-1">
+          <span className="text-[10px] sm:text-[11px] font-mono text-muted-foreground ml-1">
             More
           </span>
         </div>
       </div>
 
-      {/* Mobile / tablet day-detail card — stacked rows for clean readability */}
-      {(isMobile || isTablet) && selectedCell && (
+      {/* Touch-tier day-detail card — stacked rows, never compressed */}
+      {!isDesktop && selectedCell && (
         <div className="mt-4 border-2 border-foreground bg-background p-4 shadow-[4px_4px_0_0_var(--foreground)]">
           <div className="flex items-center justify-between mb-3 pb-2 border-b-2 border-foreground">
             <div className="font-mono font-bold text-sm whitespace-nowrap">
@@ -466,15 +469,15 @@ export function ContributionHeatmap() {
         </div>
       )}
 
-      {/* Desktop hover tooltip — clamped to section edges, structured value/label rows */}
-      {!isMobile && !isTablet && hoverCell && hoverPos && (
+      {/* Desktop hover tooltip — multi-column, edge-clamped */}
+      {isDesktop && hoverCell && hoverPos && (
         <DesktopTooltip cell={hoverCell} pos={hoverPos} />
       )}
     </section>
   );
 }
 
-/* Desktop tooltip with edge-clamping so it never overflows the section */
+/* Desktop tooltip — 5-column grid, never compresses below 280px wide. */
 function DesktopTooltip({
   cell,
   pos,
@@ -482,7 +485,7 @@ function DesktopTooltip({
   cell: Cell;
   pos: { x: number; y: number };
 }) {
-  const TOOLTIP_W = 280;
+  const TOOLTIP_W = 300;
   const ref = useRef<HTMLDivElement>(null);
   const [left, setLeft] = useState(pos.x - TOOLTIP_W / 2);
 
@@ -512,7 +515,7 @@ function DesktopTooltip({
       <div className="px-3 py-2 border-b-2 border-foreground font-mono font-bold text-xs whitespace-nowrap">
         {formatDate(cell.date)}
       </div>
-      <div className="grid grid-cols-5 px-1 py-2">
+      <div className="grid grid-cols-5 px-1 py-3">
         {(["doors", "convos", "leads", "appts", "wins"] as Metric[]).map(
           (m, i) => (
             <div
