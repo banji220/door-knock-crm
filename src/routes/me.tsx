@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell, PageHeader, DesktopPageHeader } from "@/components/AppShell";
+import { Show } from "@/components/responsive";
 import { ContributionHeatmap } from "@/components/ContributionHeatmap";
 import { StreakPanel } from "@/components/StreakPanel";
 import { MomentumMeter } from "@/components/MomentumMeter";
@@ -18,7 +19,6 @@ export const Route = createFileRoute("/me")({
   component: MePage,
 });
 
-/* Mocked today stats — replace with live data when wired up. */
 const STATS = {
   knocks: 24,
   quotes: 6,
@@ -44,8 +44,6 @@ function MePage() {
   );
   const [range, setRange] = useDateRange("Today");
 
-  /* Build the stats map from the seeded year used by the heatmap. Override
-     today with mocked STATS.knocks so the day chart matches the dashboard. */
   const statsMap = useMemo<Record<string, DayStats>>(() => {
     const days = buildYearOfActivity();
     const map: Record<string, DayStats> = {};
@@ -60,22 +58,47 @@ function MePage() {
     }
     const todayKey = isoDate(new Date());
     const base = map[todayKey] ?? {
-      doors: 0,
-      convos: 0,
-      leads: 0,
-      appts: 0,
-      wins: 0,
+      doors: 0, convos: 0, leads: 0, appts: 0, wins: 0,
     };
     map[todayKey] = { ...base, doors: STATS.knocks };
     return map;
   }, []);
 
   const streaks = useMemo(() => computeStreaks(buildYearOfActivity()), []);
-
   const closeRate =
     STATS.quotes > 0 ? Math.round((STATS.closes / STATS.quotes) * 100) : 0;
-
   const weeklyData = statsMap as unknown as WeeklyGoalData;
+
+  /* Reusable KPI cluster — same content, different grid per tier. */
+  const kpis = [
+    { value: STATS.knocks, label: "Doors", accent: false },
+    { value: STATS.quotes, label: "Quotes", accent: false },
+    { value: STATS.closes, label: "Closes", accent: false },
+    { value: `${closeRate}%`, label: "Close Rate", accent: true },
+    { value: `$${STATS.revenue.toLocaleString()}`, label: "Revenue", accent: true },
+  ] as const;
+
+  const renderActionStack = () => (
+    <>
+      <DailyMissionCard
+        current={14}
+        target={30}
+        suggestion="Hit 6 more before lunch — momentum stays alive."
+      />
+      <WeeklyGoal
+        data={weeklyData}
+        weeklyTarget={weeklyTarget}
+        onTargetChange={setWeeklyTarget}
+      />
+      <StreakPanel
+        currentStreak={streaks.current}
+        longestStreak={streaks.best}
+      />
+      <MomentumMeter />
+      <QuickLogCard initialCount={STATS.knocks} />
+      <BadgesPanel />
+    </>
+  );
 
   return (
     <AppShell
@@ -92,9 +115,10 @@ function MePage() {
       }
     >
       {/* ============================================================
-          DESKTOP — two-column command center (≥1024px)
+          DESKTOP (≥1025) — sidebar + 2-col dashboard.
+          Left: KPI row + heatmap (hero). Right: action stack.
           ============================================================ */}
-      <div className="hidden lg:block">
+      <Show on="desktop">
         <DesktopPageHeader
           eyebrow="Performance"
           title="Holy Giraffe"
@@ -102,24 +126,46 @@ function MePage() {
         />
 
         <div className="grid grid-cols-[1fr_380px] gap-6">
-          {/* === LEFT COLUMN: KPIs + Heatmap only === */}
           <div className="space-y-4 min-w-0">
             <div className="grid grid-cols-5 gap-4">
-              <KpiTile value={STATS.knocks} label="Doors Today" />
-              <KpiTile value={STATS.quotes} label="Quotes" />
-              <KpiTile value={STATS.closes} label="Closes" />
-              <KpiTile value={`${closeRate}%`} label="Close Rate" accent />
-              <KpiTile
-                value={`$${STATS.revenue.toLocaleString()}`}
-                label="Revenue"
-                accent
-              />
+              {kpis.map((k) => (
+                <KpiTile key={k.label} value={k.value} label={k.label} accent={k.accent} />
+              ))}
             </div>
             <ContributionHeatmap />
           </div>
+          <div className="space-y-4">{renderActionStack()}</div>
+        </div>
 
-          {/* === RIGHT COLUMN: stacked action/stats cards === */}
-          <div className="space-y-4">
+        <div className="text-center pt-8 pb-4">
+          <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
+            Sign out
+          </button>
+        </div>
+      </Show>
+
+      {/* ============================================================
+          TABLET (641-1024) — bottom-nav + 2-col hybrid.
+          KPIs across the top, then heatmap full-width, then action
+          stack in 2 columns to use the wider canvas.
+          ============================================================ */}
+      <Show on="tablet">
+        <div className="space-y-5">
+          <div>
+            <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+              Today
+            </div>
+            <div className="grid grid-cols-5 gap-2">
+              {kpis.map((k) => (
+                <KpiTile key={k.label} value={k.value} label={k.label} accent={k.accent} />
+              ))}
+            </div>
+          </div>
+
+          <ContributionHeatmap />
+
+          {/* 2-column action grid — denser than mobile, lighter than desktop */}
+          <div className="grid grid-cols-2 gap-4">
             <DailyMissionCard
               current={14}
               target={30}
@@ -135,83 +181,63 @@ function MePage() {
               longestStreak={streaks.best}
             />
             <MomentumMeter />
-            <QuickLogCard initialCount={STATS.knocks} />
-            <BadgesPanel />
+            <div className="col-span-2">
+              <QuickLogCard initialCount={STATS.knocks} />
+            </div>
+            <div className="col-span-2">
+              <BadgesPanel />
+            </div>
+          </div>
+
+          <div className="text-center pt-2 pb-4">
+            <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
+              Sign out
+            </button>
           </div>
         </div>
-
-        <div className="text-center pt-8 pb-4">
-          <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
-            Sign out
-          </button>
-        </div>
-      </div>
+      </Show>
 
       {/* ============================================================
-          MOBILE / TABLET — single stacked column (<lg)
+          MOBILE (≤640) — single stacked column, tight rhythm.
           ============================================================ */}
-      <div className="lg:hidden space-y-6">
-        <div>
-          <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
-            Today
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Knocks", value: STATS.knocks, accent: false },
-              { label: "Quotes", value: STATS.quotes, accent: false },
-              { label: "Closes", value: STATS.closes, accent: false },
-              { label: "Close Rate", value: `${closeRate}%`, accent: true },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="border-2 border-foreground bg-card p-4 text-center"
-              >
+      <Show on="mobile">
+        <div className="space-y-5">
+          <div>
+            <div className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-muted-foreground mb-2">
+              Today
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {kpis.slice(0, 4).map((k) => (
                 <div
-                  className={`text-3xl font-bold font-mono leading-none tabular-nums ${
-                    s.accent ? "text-primary" : "text-foreground"
-                  }`}
+                  key={k.label}
+                  className="border-2 border-foreground bg-card p-4 text-center"
                 >
-                  {s.value}
+                  <div
+                    className={`text-3xl font-bold font-mono leading-none tabular-nums ${
+                      k.accent ? "text-primary" : "text-foreground"
+                    }`}
+                  >
+                    {k.value}
+                  </div>
+                  <div className="mt-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                    {k.label}
+                  </div>
                 </div>
-                <div className="mt-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                  {s.label}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <ContributionHeatmap />
+
+          {renderActionStack()}
+
+          <div className="text-center pt-2 pb-4">
+            <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
+              Sign out
+            </button>
           </div>
         </div>
-
-        <ContributionHeatmap />
-
-        <DailyMissionCard
-          current={14}
-          target={30}
-          suggestion="Hit 6 more before lunch — momentum stays alive."
-        />
-
-        <WeeklyGoal
-          data={weeklyData}
-          weeklyTarget={weeklyTarget}
-          onTargetChange={setWeeklyTarget}
-        />
-
-        <StreakPanel
-          currentStreak={streaks.current}
-          longestStreak={streaks.best}
-        />
-
-        <MomentumMeter />
-
-        <QuickLogCard initialCount={STATS.knocks} />
-
-        <BadgesPanel />
-
-        <div className="text-center pt-2 pb-4">
-          <button className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground hover:text-destructive">
-            Sign out
-          </button>
-        </div>
-      </div>
+      </Show>
     </AppShell>
   );
 }
